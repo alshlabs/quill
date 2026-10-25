@@ -8,9 +8,9 @@ use crate::icons::ICON_ACCOUNT;
 use crate::icons::ICON_BRUSH;
 use crate::icons::ICON_CLOSE;
 use crate::icons::ICON_EXTENSIONS;
-use crate::icons::ICON_FEATHER;
 use crate::icons::ICON_FOLDER_OPENED;
 use crate::icons::ICON_GEAR;
+use crate::icons::ICON_NEW_SESSION;
 use crate::icons::ICON_SEARCH;
 use crate::panels::about_blank::PanelAboutBlank;
 use crate::panels::panel_chat::ChatEvent;
@@ -266,7 +266,7 @@ fn sidebar_nav(
     .child(
       v_flex().items_center().w(SIDEBAR_NAV_WIDTH).children(
         [
-          (SidebarView::Chats, ICON_FEATHER),
+          (SidebarView::Chats, ICON_NEW_SESSION),
           (SidebarView::Search, ICON_SEARCH),
           (SidebarView::Workspaces, ICON_FOLDER_OPENED),
           (SidebarView::Plugins, ICON_EXTENSIONS),

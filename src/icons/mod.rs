@@ -5,6 +5,7 @@ pub const ICON_ASTERISK         : &[u8] = include_bytes!("./fontawesome-icons-7.
 pub const ICON_SEARCH           : &[u8] = include_bytes!("./vscode/search-large.svg");
 pub const ICON_CLOSE            : &[u8] = include_bytes!("./vscode/close.svg");
 pub const ICON_COMMENT          : &[u8] = include_bytes!("./vscode/comment.svg");
+pub const ICON_NEW_SESSION       : &[u8] = include_bytes!("./vscode/new-session.svg");
 pub const ICON_FEATHER          : &[u8] = include_bytes!("./fontawesome-icons-7.3.1/solid/feather.svg");
 pub const ICON_EXTENSIONS       : &[u8] = include_bytes!("./vscode/extensions.svg");
 pub const ICON_GEAR             : &[u8] = include_bytes!("./vscode/gear.svg");
