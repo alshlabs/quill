@@ -10,10 +10,7 @@ But we are in the age of AI and, by Grayskull, there's no excuse to ship low qua
 
 ## Introducing Quill
 
-<div align="center">
-<video src="./.docs/recording-2026-10-25.mp4" autoplay loop muted playsinline></video>
-<div align="center"><i>Look familiar?</i></div>
-</div>
+https://github.com/user-attachments/assets/8335baf6-c4ed-4f25-a554-4dc7140fc3c7
 
 <br>
 
