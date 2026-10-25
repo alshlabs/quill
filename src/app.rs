@@ -520,6 +520,14 @@ fn tab_bar_item(
       let tabs = tabs.clone();
       move |_, _, cx| tabs.update(cx, |tabs, cx| tabs.activate(id, cx))
     })
+    .on_aux_click({
+      let tabs = tabs.clone();
+      move |event, _, cx| {
+        if event.is_middle_click() {
+          tabs.update(cx, |tabs, cx| tabs.close(id, cx));
+        }
+      }
+    })
     .child(Icon::empty().data(tab.kind.icon()).h(px(12.0)).w(px(12.0)))
     .child(tab.kind.title(cx))
     .child(

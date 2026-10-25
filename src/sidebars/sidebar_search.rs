@@ -1,5 +1,6 @@
 use gpui_kit::AnyElement;
 use gpui_kit::RenderOnce;
+use gpui_kit::base::v_flex;
 use gpui_kit::*;
 
 #[derive(IntoElement)]
@@ -38,6 +39,13 @@ impl RenderOnce for SidebarSearch {
     _window: &mut Window,
     _cx: &mut App,
   ) -> impl IntoElement {
-    div().id("sidebar_search".to_string()).child("search")
+    div().id("sidebar_search".to_string()).child(
+      v_flex().pt(px(8.0)).items_center().child("Search").child(
+        div()
+          .text_sm()
+          .font_weight(FontWeight::LIGHT)
+          .child("Under Development"),
+      ),
+    )
   }
 }
