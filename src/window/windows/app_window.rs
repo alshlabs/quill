@@ -33,18 +33,26 @@
 //! the caption's command: a click on close drags the window instead of closing
 //! it. The strip therefore reserves [`WINDOW_CONTROLS_WIDTH`] at the right edge.
 
+use gpui_kit::component::Icon;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::window_controls::WINDOW_CONTROLS;
 use super::window_controls::WINDOW_CONTROLS_WIDTH;
 use super::window_decoration::{self};
+use crate::icons::ICON_FEATHER;
+use crate::theme::colors::COLOR_BRAND_FOREGROUND;
+use crate::theme::colors::COLOR_FOREGROUND;
 use crate::theme::colors::COLOR_GREY_50;
 use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
 use crate::theme::colors::COLOR_WINDOW_INACTIVE_BACKGROUND;
 
 const TITLE_BAR_HEIGHT: f32 = 42.;
-const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
+const BRAND_LOGO_SIZE: f32 = 16.;
+/// Centres the logo over the sidebar nav icons, which sit 26px in from the
+/// window's inner edge (`SIDEBAR_MARGIN`, a 1px border and half of
+/// `SIDEBAR_NAV_WIDTH` in `app.rs`).
+const BRAND_LOGO_INSET: f32 = 26. - BRAND_LOGO_SIZE / 2.;
 const BOUNDARY_THICKNESS: f32 = 1.;
 
 /// Marks where the shell's strip ends, in the shell's own layer.
@@ -154,10 +162,17 @@ impl<V> AppRoot<V> {
           .window_control_area(WindowControlArea::Drag)
           .child(
             div()
-              .pl(px(TRAFFIC_LIGHT_RESERVED_WIDTH))
+              .pl(px(BRAND_LOGO_INSET))
               .pt(px(1.5))
               .flex()
-              .items_center(),
+              .items_center()
+              .child(
+                Icon::empty()
+                  .data(ICON_FEATHER)
+                  .h(px(BRAND_LOGO_SIZE))
+                  .w(px(BRAND_LOGO_SIZE))
+                  .text_color(rgb(COLOR_BRAND_FOREGROUND)),
+              ),
           ),
       )
       .when(!window.is_fullscreen(), |this| {
