@@ -94,12 +94,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with: { key: "x86_64-unknown-linux-gnu" }
       - run: sudo apt-get update
-      - run: sudo apt install build-essential pkg-config libfontconfig1-dev libfreetype6-dev libxcb1-dev libxkbcommon-dev libxkbcommon-x11-dev libssl-dev libzstd-dev libvulkan-dev
+      - run: sudo apt-get install -y build-essential pkg-config libfontconfig1-dev libfreetype6-dev libxcb1-dev libxkbcommon-dev libxkbcommon-x11-dev libssl-dev libzstd-dev libvulkan-dev
       - run: rustup target add x86_64-unknown-linux-gnu
       - run: sed "s/0.0.0-local/${VERSION}/g" "Cargo.toml" > "Cargo.toml.new" && mv "Cargo.toml.new" "Cargo.toml"
-      - run: cargo build --target x86_64-unknown-linux-gnu --release
+      - run: TARGET=x86_64-unknown-linux-gnu bash ./scripts/build-linux.bash
       - run: mkdir -p artifacts/${GITHUB_REPOSITORY_NAME}-linux-amd64
-      - run: cp target/x86_64-unknown-linux-gnu/release/${GITHUB_REPOSITORY_NAME} ./artifacts/${GITHUB_REPOSITORY_NAME}-linux-amd64
+      - run: cp target/x86_64-unknown-linux-gnu/release/Quill.AppImage ./artifacts/${GITHUB_REPOSITORY_NAME}-linux-amd64
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ env.GITHUB_REPOSITORY_NAME }}-linux-amd64
@@ -127,9 +127,9 @@ jobs:
       - run: sudo apt-get install -y build-essential pkg-config libfontconfig1-dev libfreetype6-dev libxcb1-dev libxkbcommon-dev libxkbcommon-x11-dev libssl-dev libzstd-dev libvulkan-dev
       - run: rustup target add aarch64-unknown-linux-gnu
       - run: sed "s/0.0.0-local/${VERSION}/g" "Cargo.toml" > "Cargo.toml.new" && mv "Cargo.toml.new" "Cargo.toml"
-      - run: cargo build --target aarch64-unknown-linux-gnu --release
+      - run: TARGET=aarch64-unknown-linux-gnu bash ./scripts/build-linux.bash
       - run: mkdir -p artifacts/${GITHUB_REPOSITORY_NAME}-linux-arm64
-      - run: cp target/aarch64-unknown-linux-gnu/release/${GITHUB_REPOSITORY_NAME} ./artifacts/${GITHUB_REPOSITORY_NAME}-linux-arm64
+      - run: cp target/aarch64-unknown-linux-gnu/release/Quill.AppImage ./artifacts/${GITHUB_REPOSITORY_NAME}-linux-arm64
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ env.GITHUB_REPOSITORY_NAME }}-linux-arm64
@@ -155,10 +155,9 @@ jobs:
         with: { key: "aarch64-apple-darwin" }
       - run: rustup target add aarch64-apple-darwin
       - run: sed "s/0.0.0-local/${VERSION}/g" "Cargo.toml" > "Cargo.toml.new" && mv "Cargo.toml.new" "Cargo.toml"
-      - run: cargo build --target aarch64-apple-darwin --release
-      - run: bash ./scripts/build-macos.bash
+      - run: TARGET=aarch64-apple-darwin bash ./scripts/build-macos.bash
       - run: mkdir -p artifacts/${GITHUB_REPOSITORY_NAME}-macos-arm64
-      - run: cp target/aarch64-apple-darwin/release/Quill.app ./artifacts/${GITHUB_REPOSITORY_NAME}-macos-arm64
+      - run: cp -R target/aarch64-apple-darwin/release/Quill.app ./artifacts/${GITHUB_REPOSITORY_NAME}-macos-arm64
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ env.GITHUB_REPOSITORY_NAME }}-macos-arm64

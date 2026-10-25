@@ -8,14 +8,21 @@ APP_NAME="Quill"
 BIN_NAME="quill"
 BUNDLE_ID="${BUNDLE_ID:-com.alshlabs.quill}"
 VERSION="$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -n 1)"
+TARGET="${TARGET:-}"
 
-cargo build --release
+if [ -n "$TARGET" ]; then
+  cargo build --release --target "$TARGET"
+  RELEASE_DIR="$ROOT/target/$TARGET/release"
+else
+  cargo build --release
+  RELEASE_DIR="$ROOT/target/release"
+fi
 
-APP_DIR="$ROOT/target/release/$APP_NAME.app"
+APP_DIR="$RELEASE_DIR/$APP_NAME.app"
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
 
-cp "$ROOT/target/release/$BIN_NAME" "$APP_DIR/Contents/MacOS/$BIN_NAME"
+cp "$RELEASE_DIR/$BIN_NAME" "$APP_DIR/Contents/MacOS/$BIN_NAME"
 
 cat > "$APP_DIR/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
