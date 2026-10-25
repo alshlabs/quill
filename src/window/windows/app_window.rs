@@ -40,7 +40,8 @@ use super::window_controls::WINDOW_CONTROLS;
 use super::window_controls::WINDOW_CONTROLS_WIDTH;
 use super::window_decoration::{self};
 use crate::theme::colors::COLOR_GREY_50;
-use crate::theme::colors::COLOR_GREY_900;
+use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
+use crate::theme::colors::COLOR_WINDOW_INACTIVE_BACKGROUND;
 
 const TITLE_BAR_HEIGHT: f32 = 42.;
 const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
@@ -78,8 +79,12 @@ impl<V: Render + 'static> Render for AppRoot<V> {
       .size_full()
       .track_focus(&self.root_focus)
       // .bg(rgb(0xffffff))
-      .bg(rgb(COLOR_GREY_900))
-      .text_color(rgb(COLOR_GREY_50))
+      .bg(rgb(if window.is_window_active() {
+        COLOR_WINDOW_BACKGROUND
+      } else {
+        COLOR_WINDOW_INACTIVE_BACKGROUND
+      }))
+      .text_color(rgb(COLOR_FOREGROUND))
       .relative()
       .child(self.title_bar(window))
       // The content is not inset: the delegate's root owns this coordinate

@@ -10,9 +10,9 @@ use gpui_kit::*;
 
 use super::window_controls::WindowControl;
 use super::window_decoration::{self};
-use crate::theme::colors::COLOR_GREY_50;
-use crate::theme::colors::COLOR_GREY_800;
-use crate::theme::colors::COLOR_GREY_900;
+use crate::theme::colors::COLOR_FOREGROUND;
+use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
+use crate::theme::colors::COLOR_WINDOW_INACTIVE_BACKGROUND;
 
 const TITLE_BAR_HEIGHT: f32 = 42.;
 const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
@@ -35,15 +35,20 @@ impl<V: Render + 'static> Render for AppRoot<V> {
     cx: &mut Context<Self>,
   ) -> impl IntoElement {
     let chrome = window_decoration::window_chrome(window);
+    let background = rgb(if window.is_window_active() {
+      COLOR_WINDOW_BACKGROUND
+    } else {
+      COLOR_WINDOW_INACTIVE_BACKGROUND
+    });
 
     let body = div()
       .flex()
       .flex_col()
       .size_full()
       .track_focus(&self.root_focus)
-      .bg(rgb(COLOR_GREY_900))
-      .text_color(rgb(COLOR_GREY_50))
-      .border_color(rgb(COLOR_GREY_800))
+      .bg(background)
+      .text_color(rgb(COLOR_FOREGROUND))
+      .border_color(background)
       .when(chrome.top_left, |this| this.rounded_tl(px(WINDOW_RADIUS)))
       .when(chrome.top_right, |this| this.rounded_tr(px(WINDOW_RADIUS)))
       .when(chrome.bottom_left, |this| {

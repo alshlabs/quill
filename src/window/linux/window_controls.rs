@@ -14,7 +14,7 @@ use crate::icons::ICON_WINDOW_MAXIMIZE;
 use crate::icons::ICON_WINDOW_MINIMIZE;
 use crate::theme::colors::COLOR_RED_700;
 
-const WINDOW_CONTROL_WIDTH: f32 = 48.;
+const WINDOW_CONTROL_WIDTH: f32 = 32.;
 
 /// The glyphs are drawn on a 16-unit grid with strokes on half units, so they
 /// only stay pixel-crisp when rendered at exactly this size.

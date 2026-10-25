@@ -358,7 +358,7 @@ fn chat_message((ix, message): (usize, &ChatMessage)) -> AnyElement {
     ChatRole::Error => div()
       .id(id)
       .text_sm()
-      .text_color(rgb(theme::colors::COLOR_RED_300))
+      .text_color(rgb(theme::colors::COLOR_ERROR_FOREGROUND))
       .child(message.content.clone())
       .into_any_element(),
   }
@@ -369,9 +369,9 @@ fn chat_entry(
   on_send: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
 ) -> Div {
   v_flex()
-    .bg(rgb(theme::colors::COLOR_BACKGROUND_600))
+    .bg(rgb(theme::colors::COLOR_INPUT_BACKGROUND))
     .border_1()
-    .border_color(rgb(theme::colors::COLOR_GREY_875))
+    .border_color(rgb(theme::colors::COLOR_INPUT_BORDER))
     .w_full()
     .max_w(CHAT_MAX_WIDTH)
     .rounded(px(10.0))
@@ -383,7 +383,7 @@ fn chat_entry(
       div().px(px(12.0)).pt(px(12.0)).pb(px(4.0)).child(
         Textarea::new(input)
           .appearance(false)
-          .text_color(rgb(theme::colors::COLOR_GREY_300)),
+          .text_color(rgb(theme::colors::COLOR_FOREGROUND)),
       ),
     )
     .child(toolbar(on_send))
@@ -401,14 +401,14 @@ fn tip(
     .px(px(12.0))
     .py(px(10.0))
     .border_b_1()
-    .border_color(rgb(theme::colors::COLOR_GREY_875))
+    .border_color(rgb(theme::colors::COLOR_EDITOR_BORDER))
     .text_sm()
-    .text_color(rgb(theme::colors::COLOR_GREY_500))
+    .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND))
     .child(StyledText::new(text).with_highlights([
       (
         0..TIP_LABEL.len(),
         HighlightStyle {
-          color: Some(rgb(theme::colors::COLOR_GREY_400).into()),
+          color: Some(rgb(theme::colors::COLOR_FOREGROUND).into()),
           font_weight: Some(FontWeight::BOLD),
           ..Default::default()
         },
@@ -416,7 +416,7 @@ fn tip(
       (
         command_start..command_start + command.len(),
         HighlightStyle {
-          color: Some(rgb(theme::colors::COLOR_BLUE_300).into()),
+          color: Some(rgb(theme::colors::COLOR_LINK_FOREGROUND).into()),
           ..Default::default()
         },
       ),
@@ -440,13 +440,13 @@ fn toolbar(on_send: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static) -> Di
           div()
             .w(px(1.0))
             .h(px(14.0))
-            .bg(rgb(theme::colors::COLOR_GREY_850)),
+            .bg(rgb(theme::colors::COLOR_INPUT_BORDER)),
         )
         .child(
           div()
             .px(px(6.0))
             .text_sm()
-            .text_color(rgb(theme::colors::COLOR_GREY_500))
+            .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND))
             .child("786K"),
         )
         .child(toolbar_button(ICON_SETTINGS, None)),
@@ -459,7 +459,7 @@ fn toolbar(on_send: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static) -> Di
         .child(
           toolbar_button(ICON_ARROW_UP, None)
             .id("chat-send")
-            .text_color(rgb(theme::colors::COLOR_GREY_700))
+            .text_color(rgba(theme::colors::COLOR_DISABLED_FOREGROUND_A))
             .on_click(on_send),
         ),
     )
@@ -477,8 +477,8 @@ fn toolbar_button(
     .rounded(px(6.0))
     .cursor_pointer()
     .text_sm()
-    .text_color(rgb(theme::colors::COLOR_GREY_500))
-    .hover(|this| this.bg(rgb(theme::colors::COLOR_GREY_900)))
+    .text_color(rgb(theme::colors::COLOR_FOREGROUND))
+    .hover(|this| this.bg(rgba(theme::colors::COLOR_TOOLBAR_HOVER_BACKGROUND_A)))
     .child(Icon::empty().data(icon).h(px(14.0)).w(px(14.0)))
     .children(label)
 }

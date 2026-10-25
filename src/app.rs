@@ -222,7 +222,8 @@ impl Render for AppRoot {
               .h_full()
               .border_1()
               .rounded(px(8.0))
-              .border_color(rgb(theme::colors::COLOR_GREY_875))
+              .bg(rgb(theme::colors::COLOR_PANEL_BACKGROUND))
+              .border_color(rgb(theme::colors::COLOR_PANEL_BORDER))
               .flex_shrink_0()
               .ml(SIDEBAR_MARGIN)
               .child(sidebar_nav(
@@ -266,8 +267,8 @@ fn sidebar_nav(
       v_flex().items_center().w(SIDEBAR_NAV_WIDTH).children(
         [
           (SidebarView::Chats, ICON_FEATHER),
-          (SidebarView::Workspaces, ICON_FOLDER_OPENED),
           (SidebarView::Search, ICON_SEARCH),
+          (SidebarView::Workspaces, ICON_FOLDER_OPENED),
           (SidebarView::Plugins, ICON_EXTENSIONS),
         ]
         .into_iter()
@@ -321,15 +322,15 @@ fn sidebar_nav_icon(
     .h(px(32.0))
     .mt(px(6.0))
     .mb(px(6.0))
-    .text_color(rgb(theme::colors::COLOR_GREY_600))
+    .text_color(rgb(theme::colors::COLOR_ICON_FOREGROUND))
     .rounded(px(4.0))
     .cursor_pointer()
     .when(active, |this| {
       this
-        .bg(rgb(theme::colors::COLOR_GREY_800))
-        .text_color(rgb(theme::colors::COLOR_WHITE))
+        .bg(rgb(theme::colors::COLOR_LIST_SELECTION_BACKGROUND))
+        .text_color(rgb(theme::colors::COLOR_ACTIVITY_BAR_FOREGROUND))
     })
-    .hover(|this| this.bg(rgb(theme::colors::COLOR_GREY_875)))
+    .hover(|this| this.bg(rgba(theme::colors::COLOR_TOOLBAR_HOVER_BACKGROUND_A)))
     .child(
       Icon::empty().data(icon).h(px(24.0)).w(px(24.0)), // .h_full().w_full()
     )
@@ -344,7 +345,7 @@ fn sidebar_contents(
     .h_full()
     .w(width)
     .flex_shrink_0()
-    .border_color(rgb(theme::colors::COLOR_GREY_875))
+    .border_color(rgb(theme::colors::COLOR_PANEL_BORDER))
     .border_l_1()
     .map(|this| match view {
       Some(SidebarView::Chats) => this.child(sidebar_chats.clone()),
@@ -361,7 +362,7 @@ fn dragbar(
   cx: &App,
 ) -> impl IntoElement {
   let highlighted = *dragging.read(cx) || *hovered.read(cx);
-  let color = rgb(theme::colors::COLOR_DRAG);
+  let color = rgb(theme::colors::COLOR_FOCUS_BORDER);
   let transparent = Rgba { a: 0.0, ..color };
 
   div()
@@ -434,7 +435,7 @@ fn tab_bar(
     .h(TAB_BAR_HEIGHT)
     .flex_shrink_0()
     .rounded_t(px(8.0))
-    .bg(rgb(theme::colors::COLOR_BACKGROUND_500))
+    .bg(rgb(theme::colors::COLOR_TAB_BAR_BACKGROUND))
     // .px(px(4.0))
     .children(items.iter().enumerate().flat_map(|(ix, tab)| {
       let separator = (ix > 0).then(|| {
@@ -463,7 +464,9 @@ fn tab_separator(visible: bool) -> Div {
     .w(px(1.0))
     .h(px(16.0))
     .flex_shrink_0()
-    .when(visible, |this| this.bg(rgb(theme::colors::COLOR_GREY_850)))
+    .when(visible, |this| {
+      this.bg(rgb(theme::colors::COLOR_EDITOR_BORDER))
+    })
 }
 
 fn tab_bar_item(
@@ -484,14 +487,14 @@ fn tab_bar_item(
     .rounded_t(px(8.0))
     .cursor_pointer()
     .text_xs()
-    .text_color(rgb(theme::colors::COLOR_GREY_600))
+    .text_color(rgb(theme::colors::COLOR_TAB_INACTIVE_FOREGROUND))
     .map(|this| {
       if active {
         this
-          .bg(rgb(theme::colors::COLOR_BACKGROUND_800))
-          .text_color(rgb(theme::colors::COLOR_WHITE))
+          .bg(rgb(theme::colors::COLOR_EDITOR_BACKGROUND))
+          .text_color(rgb(theme::colors::COLOR_TAB_ACTIVE_FOREGROUND))
       } else {
-        this.hover(|this| this.text_color(rgb(theme::colors::COLOR_GREY_400)))
+        this.hover(|this| this.text_color(rgb(theme::colors::COLOR_FOREGROUND)))
       }
     })
     .on_click({
@@ -509,7 +512,7 @@ fn tab_bar_item(
         .w(px(18.0))
         .h(px(18.0))
         .rounded(px(4.0))
-        .hover(|this| this.bg(rgb(theme::colors::COLOR_GREY_850)))
+        .hover(|this| this.bg(rgba(theme::colors::COLOR_TOOLBAR_HOVER_BACKGROUND_A)))
         .on_click({
           let tabs = tabs.clone();
           move |_, _, cx| {
@@ -529,7 +532,7 @@ fn main_content() -> Div {
     // .ml(px(4.0))
     .mr(px(4.0))
     .border_1()
-    .bg(rgb(theme::colors::COLOR_BACKGROUND_800))
-    .border_color(rgb(theme::colors::COLOR_GREY_875))
+    .bg(rgb(theme::colors::COLOR_EDITOR_BACKGROUND))
+    .border_color(rgb(theme::colors::COLOR_EDITOR_BORDER))
     .rounded(px(8.0))
 }

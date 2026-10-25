@@ -6,8 +6,8 @@
 use gpui_kit::component::TitleBar;
 use gpui_kit::*;
 
-use crate::theme::colors::COLOR_GREY_50;
-use crate::theme::colors::COLOR_GREY_900;
+use crate::theme::colors::COLOR_FOREGROUND;
+use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
 
 const TITLE_BAR_HEIGHT: f32 = 42.;
 const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
@@ -17,7 +17,7 @@ const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
 const WINDOW_BACKGROUND_ALPHA: f32 = 0.8;
 
 fn window_background() -> Rgba {
-  let mut color = rgb(COLOR_GREY_900);
+  let mut color = rgb(COLOR_WINDOW_BACKGROUND);
   color.a = WINDOW_BACKGROUND_ALPHA;
   color
 }
@@ -39,7 +39,7 @@ impl<V: Render + 'static> Render for AppRoot<V> {
       .size_full()
       .track_focus(&self.root_focus)
       .bg(window_background())
-      .text_color(rgb(COLOR_GREY_50))
+      .text_color(rgb(COLOR_FOREGROUND))
       .child(deferred(self.title_bar(cx)))
       .child(self.root.clone())
   }

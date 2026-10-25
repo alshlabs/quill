@@ -69,7 +69,7 @@ impl Render for SidebarChats {
         div()
           .p(px(6.0))
           .text_xs()
-          .text_color(rgb(theme::colors::COLOR_RED_300))
+          .text_color(rgb(theme::colors::COLOR_ERROR_FOREGROUND))
           .child(error)
       }))
       .children(self.chats.iter().enumerate().map(|(ix, chat)| {
@@ -82,10 +82,10 @@ impl Render for SidebarChats {
           .rounded(px(6.0))
           .cursor_pointer()
           .text_sm()
-          .text_color(rgb(theme::colors::COLOR_GREY_400))
+          .text_color(rgb(theme::colors::COLOR_FOREGROUND))
           .hover(|this| {
             this
-              .bg(rgb(theme::colors::COLOR_GREY_875))
+              .bg(rgb(theme::colors::COLOR_LIST_HOVER_BACKGROUND))
               .text_color(rgb(theme::colors::COLOR_WHITE))
           })
           .on_click(cx.listener(move |_, _: &ClickEvent, _, cx| {
@@ -103,7 +103,7 @@ impl Render for SidebarChats {
             div()
               .flex_shrink_0()
               .text_xs()
-              .text_color(rgb(theme::colors::COLOR_GREY_600))
+              .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND))
               .child(relative_time(now, chat.updated_at)),
           )
       }));
@@ -128,11 +128,11 @@ fn new_chat_button() -> Stateful<Div> {
     .justify_center()
     .rounded(px(6.0))
     .cursor_pointer()
-    .bg(rgb(theme::colors::COLOR_WHITE))
+    .bg(rgb(theme::colors::COLOR_BUTTON_BACKGROUND))
     .text_sm()
     .font_weight(FontWeight::MEDIUM)
-    .text_color(rgb(theme::colors::COLOR_GREY_900))
-    .hover(|this| this.bg(rgb(theme::colors::COLOR_GREY_200)))
+    .text_color(rgb(theme::colors::COLOR_BUTTON_FOREGROUND))
+    .hover(|this| this.bg(rgb(theme::colors::COLOR_BUTTON_HOVER_BACKGROUND)))
     .on_click(|_, window, cx| window.dispatch_action(NewChat.boxed_clone(), cx))
     .child("New Chat")
 }

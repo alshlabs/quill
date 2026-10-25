@@ -6,6 +6,39 @@ pub const COLOR_WHITE: u32 = 0xffffff;
 pub const COLOR_BLACK: u32 = 0x000000;
 pub const COLOR_BLACK_FAINT: u32 = 0x0d0d0e;
 
+// Matched against a running VS Code dark theme, which differs from stock
+// "Dark Modern" in its backgrounds. The `_A` constants carry an alpha channel
+// and must go through `rgba()`, not `rgb()`.
+pub const COLOR_FOREGROUND: u32 = 0xcccccc;
+pub const COLOR_DESCRIPTION_FOREGROUND: u32 = 0x9d9d9d;
+pub const COLOR_DISABLED_FOREGROUND_A: u32 = 0xcccccc80;
+pub const COLOR_ERROR_FOREGROUND: u32 = 0xf85149;
+pub const COLOR_LINK_FOREGROUND: u32 = 0x4daafc;
+pub const COLOR_FOCUS_BORDER: u32 = 0x0078d4;
+pub const COLOR_WINDOW_BACKGROUND: u32 = 0x1f2021;
+pub const COLOR_WINDOW_INACTIVE_BACKGROUND: u32 = 0x191a1b;
+pub const COLOR_EDITOR_BACKGROUND: u32 = 0x191a1b;
+pub const COLOR_EDITOR_BORDER: u32 = 0x2e2f30;
+pub const COLOR_PANEL_BACKGROUND: u32 = 0x1f2021;
+pub const COLOR_PANEL_BORDER: u32 = 0x2a2a2a;
+pub const COLOR_ICON_FOREGROUND: u32 = 0x8b8b8b;
+pub const COLOR_ACTIVITY_BAR_FOREGROUND: u32 = 0xd7d7d7;
+pub const COLOR_TAB_BAR_BACKGROUND: u32 = 0x252627;
+pub const COLOR_TAB_ACTIVE_FOREGROUND: u32 = 0xececec;
+pub const COLOR_TAB_INACTIVE_FOREGROUND: u32 = 0x8b8b8b;
+pub const COLOR_LIST_HOVER_BACKGROUND: u32 = 0x2a2d2e;
+pub const COLOR_LIST_SELECTION_BACKGROUND: u32 = 0x37373d;
+pub const COLOR_TOOLBAR_HOVER_BACKGROUND_A: u32 = 0x5a5d5e50;
+pub const COLOR_INPUT_BACKGROUND: u32 = 0x313131;
+pub const COLOR_INPUT_BORDER: u32 = 0x3c3c3c;
+pub const COLOR_BUTTON_BACKGROUND: u32 = 0x0078d4;
+pub const COLOR_BUTTON_HOVER_BACKGROUND: u32 = 0x026ec1;
+pub const COLOR_BUTTON_FOREGROUND: u32 = 0xffffff;
+pub const COLOR_KEYBINDING_BACKGROUND: u32 = 0x2a2b2b;
+pub const COLOR_KEYBINDING_BORDER: u32 = 0x303131;
+pub const COLOR_WATERMARK_FOREGROUND: u32 = 0xbebebe;
+pub const COLOR_LETTERPRESS: u32 = 0x111213;
+
 pub const COLOR_RED_50: u32 = 0xffebee;
 pub const COLOR_RED_100: u32 = 0xffcdd2;
 pub const COLOR_RED_200: u32 = 0xef9a9a;

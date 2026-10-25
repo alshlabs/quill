@@ -8,8 +8,8 @@ use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::ClickHandler;
-use crate::theme::colors::COLOR_BLUE_GREY_800;
-use crate::theme::colors::COLOR_GREY_50;
+use crate::theme::colors::COLOR_FOREGROUND;
+use crate::theme::colors::COLOR_INPUT_BACKGROUND;
 
 const MAX_WIDTH: f32 = 768.;
 const PADDING_X: f32 = 12.;
@@ -72,13 +72,13 @@ impl RenderOnce for AppChatBubbleUser {
       // .self_end()
       // .ml_auto()
       .rounded(px(RADIUS))
-      .bg(rgb(COLOR_BLUE_GREY_800))
+      .bg(rgb(COLOR_INPUT_BACKGROUND))
       .px(px(PADDING_X))
       .py(px(PADDING_Y))
       .text_sm()
       .font_weight(FontWeight::LIGHT)
       .line_height(px(20.))
-      .text_color(rgb(COLOR_GREY_50))
+      .text_color(rgb(COLOR_FOREGROUND))
       .when_some(self.on_click, |this, on_click| {
         this
           .cursor_pointer()

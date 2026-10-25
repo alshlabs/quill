@@ -65,14 +65,14 @@ impl RenderOnce for PanelAboutBlank {
       .items_center()
       .w_full()
       .h_full()
-      .text_color(rgb(theme::colors::COLOR_WHITE))
+      .text_color(rgb(theme::colors::COLOR_FOREGROUND))
       .child(
         Icon::empty()
           .data(ICON_ASTERISK)
           .data(ICON_FEATHER)
           .h(px(270.0))
           .w(px(270.0))
-          .text_color(rgb(theme::colors::COLOR_BLACK_FAINT)),
+          .text_color(rgb(theme::colors::COLOR_LETTERPRESS)),
       )
       .child(
         v_flex()
@@ -127,7 +127,7 @@ fn suggested_item(
         .data(icon)
         .h(px(16.0))
         .w(px(16.0))
-        .text_color(rgb(theme::colors::COLOR_GREY_500)),
+        .text_color(rgb(theme::colors::COLOR_ICON_FOREGROUND)),
     )
     .child(label(text))
     .child(
@@ -142,7 +142,7 @@ fn label(text: &str) -> Div {
     .flex_1()
     .font_weight(FontWeight::LIGHT)
     .text_sm()
-    .text_color(rgb(theme::colors::COLOR_GREY_400))
+    .text_color(rgb(theme::colors::COLOR_WATERMARK_FOREGROUND))
     .child(text.to_string())
 }
 
@@ -155,8 +155,8 @@ fn keycap() -> Div {
     .px(px(6.0))
     .rounded(px(4.0))
     .border_1()
-    .border_color(rgb(theme::colors::COLOR_GREY_825))
-    .bg(rgb(theme::colors::COLOR_GREY_900))
+    .border_color(rgb(theme::colors::COLOR_KEYBINDING_BORDER))
+    .bg(rgb(theme::colors::COLOR_KEYBINDING_BACKGROUND))
     .text_xs()
-    .text_color(rgb(theme::colors::COLOR_GREY_400))
+    .text_color(rgb(theme::colors::COLOR_FOREGROUND))
 }
