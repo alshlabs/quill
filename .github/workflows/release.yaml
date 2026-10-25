@@ -58,7 +58,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: sudo apt-get update
       - run: sudo apt-get install -y build-essential pkg-config libfontconfig1-dev libfreetype6-dev libxcb1-dev libxkbcommon-dev libxkbcommon-x11-dev libssl-dev libzstd-dev libvulkan-dev
-      # - run: cargo test
+      - run: cargo test
 
   format:
     name: 📝 Format
@@ -79,7 +79,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: sudo apt-get update
       - run: sudo apt-get install -y build-essential pkg-config libfontconfig1-dev libfreetype6-dev libxcb1-dev libxkbcommon-dev libxkbcommon-x11-dev libssl-dev libzstd-dev libvulkan-dev
-      # - run: cargo clippy --all-targets --workspace -- -D warnings
+      - run: cargo clippy --all-targets --workspace -- -D warnings
 
   build_linux_amd64:
     name: 🐥 Linux AMD64
