@@ -10,15 +10,13 @@ But we are in the age of AI and, by Grayskull, there's no excuse to ship low qua
 
 ## Downloads
 
-|Platform|Link|
-|-|-|
-|Windows|https://github.com/alshlabs/quill/releases/latest/download/quill-windows-amd64.zip|
-|MacOS|https://github.com/alshlabs/quill/releases/latest/download/quill-macos-arm64.tar.gz|
-|Linux|https://github.com/alshlabs/quill/releases/latest/download/quill-linux-arm64.tar.gz|
+|Platform|Type|Link|
+|-|-|-|
+|Windows|Portable Executable|https://github.com/alshlabs/quill/releases/latest/download/quill-windows-amd64.zip|
+|MacOS|`.app` file|https://github.com/alshlabs/quill/releases/latest/download/quill-macos-arm64.tar.gz|
+|Linux|`AppImage`|https://github.com/alshlabs/quill/releases/latest/download/quill-linux-arm64.tar.gz|
 
-_Note: Make sure the `quill.yaml` is properly configured with your OpenAPI compatible API and key. The app will silently crash otherwise._
-
-_Note: I haven't wrapped this up in an `Quill.AppImage` or `Quill.App`, it's just a binary, so you may need to run it from the terminal to get it showing anything._ 
+_Note: Configure your models under `$HOME/.config/quill/config.yml`_
 
 ## Introducing Quill
 
