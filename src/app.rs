@@ -432,11 +432,23 @@ fn tab_bar(
   let items = state.items();
 
   h_flex()
+    .relative()
     .h(TAB_BAR_HEIGHT)
     .flex_shrink_0()
     .rounded_t(px(8.0))
     .bg(rgb(theme::colors::COLOR_TAB_BAR_BACKGROUND))
     // .px(px(4.0))
+    // Must stay the first child: tabs paint over it, so the active tab's
+    // background hides the line beneath it.
+    .child(
+      div()
+        .absolute()
+        .bottom_0()
+        .left_0()
+        .right_0()
+        .h(px(1.0))
+        .bg(rgb(theme::colors::COLOR_EDITOR_BORDER)),
+    )
     .children(items.iter().enumerate().flat_map(|(ix, tab)| {
       let separator = (ix > 0).then(|| {
         let visible = active != Some(items[ix - 1].id) && active != Some(tab.id);
@@ -488,11 +500,18 @@ fn tab_bar_item(
     .cursor_pointer()
     .text_xs()
     .text_color(rgb(theme::colors::COLOR_TAB_INACTIVE_FOREGROUND))
+    // Every tab carries the border so selecting one doesn't shift its layout;
+    // only the active tab makes it visible.
+    .border_t_1()
+    .border_l_1()
+    .border_r_1()
+    .border_color(transparent_black())
     .map(|this| {
       if active {
         this
           .bg(rgb(theme::colors::COLOR_EDITOR_BACKGROUND))
           .text_color(rgb(theme::colors::COLOR_TAB_ACTIVE_FOREGROUND))
+          .border_color(rgb(theme::colors::COLOR_EDITOR_BORDER))
       } else {
         this.hover(|this| this.text_color(rgb(theme::colors::COLOR_FOREGROUND)))
       }
