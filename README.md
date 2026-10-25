@@ -19,7 +19,7 @@ This is an LLM harness that uses a miniscule **60mb of ram** and runs at the fra
 It's not even fully optimized yet.
 
 <div align="center">
-<img src="./.docs/usage-2026-20-25.png" />
+<img src="./.docs/usage-2026-10-25.png" />
 </div>
 
 ## But, How?
