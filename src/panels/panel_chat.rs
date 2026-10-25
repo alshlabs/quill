@@ -25,7 +25,9 @@ use crate::services::agent::HistoryMessage;
 use crate::services::agent::HistoryRole;
 use crate::theme;
 
+#[allow(dead_code)]
 const TIP_LABEL: &str = "Tip:";
+#[allow(dead_code)]
 const TIP_COMMAND: &str = "/create-skill";
 const CHAT_MAX_WIDTH: Pixels = px(750.0);
 // The chat entry is overlaid on the message list, so the list needs room to
@@ -387,6 +389,7 @@ fn chat_entry(
     .child(toolbar(on_send))
 }
 
+#[allow(dead_code)]
 fn tip(
   command: &str,
   description: &str,

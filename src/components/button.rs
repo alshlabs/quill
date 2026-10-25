@@ -8,6 +8,7 @@ use gpui_kit::base::StyledExt as _;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use super::ClickHandler;
 use crate::theme;
 
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
@@ -79,7 +80,7 @@ pub struct AppButton {
   color: AppButtonColor,
   variant: AppButtonVariant,
   children: Vec<AnyElement>,
-  on_click: Option<Rc<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
+  on_click: Option<ClickHandler>,
   style: StyleRefinement,
 }
 

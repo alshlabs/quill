@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use gpui_kit::AnyElement;
 use gpui_kit::RenderOnce;
 use gpui_kit::base::h_flex;
@@ -22,7 +20,6 @@ use crate::theme;
 pub struct PanelAboutBlank {
   id: ElementId,
   children: Vec<AnyElement>,
-  on_click: Option<Rc<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
   style: StyleRefinement,
 }
 
@@ -31,7 +28,6 @@ impl PanelAboutBlank {
     Self {
       id: id.into(),
       children: Vec::new(),
-      on_click: None,
       style: StyleRefinement::default(),
     }
   }

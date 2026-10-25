@@ -14,6 +14,7 @@ pub struct Config {
   pub models: Vec<AgentConfig>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct AgentConfig {
   pub name: String,

@@ -7,6 +7,7 @@ use gpui_kit::base::StyledExt as _;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use super::ClickHandler;
 use crate::theme::colors::COLOR_BLUE_GREY_800;
 use crate::theme::colors::COLOR_GREY_50;
 
@@ -19,7 +20,7 @@ const RADIUS: f32 = 12.;
 pub struct AppChatBubbleUser {
   id: ElementId,
   children: Vec<AnyElement>,
-  on_click: Option<Rc<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
+  on_click: Option<ClickHandler>,
   style: StyleRefinement,
 }
 
