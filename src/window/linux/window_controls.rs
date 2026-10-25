@@ -1,6 +1,6 @@
 //! Window control buttons for the Linux shell.
 //!
-//! These draw the app's own bootstrap icons, because the icons shipped by the
+//! These draw the app's own caption glyphs, because the icons shipped by the
 //! component library are resolved through an asset bundle this application does
 //! not register.
 
@@ -9,23 +9,16 @@ use gpui_kit::component::Icon;
 use gpui_kit::component::Sizable as _;
 use gpui_kit::*;
 
-use crate::icons::ICON_DASH;
-use crate::icons::ICON_SQUARE;
-use crate::icons::ICON_X;
+use crate::icons::ICON_WINDOW_CLOSE;
+use crate::icons::ICON_WINDOW_MAXIMIZE;
+use crate::icons::ICON_WINDOW_MINIMIZE;
 use crate::theme::colors::COLOR_RED_700;
 
 const WINDOW_CONTROL_WIDTH: f32 = 48.;
 
-/// The box each icon is drawn into, sized so that all three glyphs land on the
-/// same 10px extent and the same stroke weight.
-///
-/// Bootstrap draws the glyphs at different scales inside their shared 16-unit
-/// viewBox: the square spans the whole of it, while the dash covers half its
-/// width and the cross just under half of both axes. One icon size for all
-/// three therefore leaves the square oversized and the other two undersized.
-const MINIMIZE_ICON_SIZE: f32 = 20.;
-const MAXIMIZE_ICON_SIZE: f32 = 10.;
-const CLOSE_ICON_SIZE: f32 = 21.;
+/// The glyphs are drawn on a 16-unit grid with strokes on half units, so they
+/// only stay pixel-crisp when rendered at exactly this size.
+const WINDOW_CONTROL_ICON_SIZE: f32 = 16.;
 
 /// Diameter of the hover/active highlight, centred inside the button cell.
 const WINDOW_CONTROL_HIGHLIGHT_SIZE: f32 = 30.;
@@ -48,17 +41,9 @@ impl WindowControl {
 
   fn icon(self) -> &'static [u8] {
     match self {
-      Self::Minimize => ICON_DASH,
-      Self::Maximize => ICON_SQUARE,
-      Self::Close => ICON_X,
-    }
-  }
-
-  fn icon_size(self) -> Pixels {
-    match self {
-      Self::Minimize => px(MINIMIZE_ICON_SIZE),
-      Self::Maximize => px(MAXIMIZE_ICON_SIZE),
-      Self::Close => px(CLOSE_ICON_SIZE),
+      Self::Minimize => ICON_WINDOW_MINIMIZE,
+      Self::Maximize => ICON_WINDOW_MAXIMIZE,
+      Self::Close => ICON_WINDOW_CLOSE,
     }
   }
 
@@ -140,7 +125,11 @@ impl RenderOnce for WindowControl {
           .group_active(self.id(), |style| {
             style.bg(active_background).text_color(hover_foreground)
           })
-          .child(Icon::empty().data(self.icon()).with_size(self.icon_size())),
+          .child(
+            Icon::empty()
+              .data(self.icon())
+              .with_size(px(WINDOW_CONTROL_ICON_SIZE)),
+          ),
       )
   }
 }

@@ -36,3 +36,7 @@ pub const ICON_SLIDERS: &[u8] = include_bytes!("./fontawesome-icons-7.3.1/solid/
 pub const ICON_MIC: &[u8] = include_bytes!("./bootstrap-icons-1.13.1/mic.svg");
 pub const ICON_ARROW_UP: &[u8] = include_bytes!("./bootstrap-icons-1.13.1/arrow-up.svg");
 pub const ICON_PLUS_LG: &[u8] = include_bytes!("./bootstrap-icons-1.13.1/plus-lg.svg");
+
+pub const ICON_WINDOW_MINIMIZE: &[u8] = include_bytes!("./window-controls/minimize.svg");
+pub const ICON_WINDOW_MAXIMIZE: &[u8] = include_bytes!("./window-controls/maximize.svg");
+pub const ICON_WINDOW_CLOSE: &[u8] = include_bytes!("./window-controls/close.svg");

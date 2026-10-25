@@ -14,7 +14,7 @@ use crate::theme::colors::COLOR_GREY_50;
 use crate::theme::colors::COLOR_GREY_800;
 use crate::theme::colors::COLOR_GREY_900;
 
-const TITLE_BAR_HEIGHT: f32 = 48.;
+const TITLE_BAR_HEIGHT: f32 = 42.;
 const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
 
 const WINDOW_RADIUS: f32 = 12.;
