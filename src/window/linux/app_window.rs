@@ -4,18 +4,22 @@
 //! and resize hit zones, while still tolerating server-side decorations from the
 //! window manager.
 
+use gpui_kit::component::Icon;
 use gpui_kit::component::InteractiveElementExt as _;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
 use super::window_controls::WindowControl;
 use super::window_decoration::{self};
+use crate::icons::ICON_FEATHER;
+use crate::theme::colors::COLOR_BRAND_FOREGROUND;
 use crate::theme::colors::COLOR_FOREGROUND;
 use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
 use crate::theme::colors::COLOR_WINDOW_INACTIVE_BACKGROUND;
 
 const TITLE_BAR_HEIGHT: f32 = 42.;
-const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
+const BRAND_LOGO_SIZE: f32 = 24.;
+const BRAND_LOGO_INSET: f32 = 26. - BRAND_LOGO_SIZE / 2.;
 
 const WINDOW_RADIUS: f32 = 12.;
 
@@ -126,10 +130,17 @@ impl<V> AppRoot<V> {
           })
           .child(
             div()
-              .pl(px(TRAFFIC_LIGHT_RESERVED_WIDTH))
+              .pl(px(BRAND_LOGO_INSET))
               .pt(px(1.5))
               .flex()
-              .items_center(),
+              .items_center()
+              .child(
+                Icon::empty()
+                  .data(ICON_FEATHER)
+                  .h(px(BRAND_LOGO_SIZE))
+                  .w(px(BRAND_LOGO_SIZE))
+                  .text_color(rgb(COLOR_BRAND_FOREGROUND)),
+              ),
           ),
       )
       .when(is_client_decorated, |this| {
