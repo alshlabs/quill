@@ -38,6 +38,6 @@ impl RenderOnce for SidebarSearch {
     _window: &mut Window,
     _cx: &mut App,
   ) -> impl IntoElement {
-    div().id(format!("sidebar_search")).child("search")
+    div().id("sidebar_search".to_string()).child("search")
   }
 }

@@ -38,6 +38,6 @@ impl RenderOnce for SidebarWorkspaces {
     _window: &mut Window,
     _cx: &mut App,
   ) -> impl IntoElement {
-    div().id(format!("sidebar_workspaces")).child("workspaces")
+    div().id("sidebar_workspaces".to_string()).child("workspaces")
   }
 }

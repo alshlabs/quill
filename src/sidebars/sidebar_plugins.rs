@@ -38,6 +38,6 @@ impl RenderOnce for SidebarPlugins {
     _window: &mut Window,
     _cx: &mut App,
   ) -> impl IntoElement {
-    div().id(format!("sidebar_plugins")).child("plugins")
+    div().id("sidebar_plugins".to_string()).child("plugins")
   }
 }

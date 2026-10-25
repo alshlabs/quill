@@ -37,8 +37,8 @@ impl ParentElement for AppFormLabel {
 impl RenderOnce for AppFormLabel {
   fn render(
     self,
-    window: &mut Window,
-    cx: &mut App,
+    _window: &mut Window,
+    _cx: &mut App,
   ) -> impl IntoElement {
     div()
       .id(self.id)

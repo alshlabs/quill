@@ -56,6 +56,8 @@ jobs:
       - uses: actions/checkout@v7
       - run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - uses: Swatinem/rust-cache@v2
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y build-essential pkg-config libfontconfig1-dev libfreetype6-dev libxcb1-dev libxkbcommon-dev libxkbcommon-x11-dev libssl-dev libzstd-dev libvulkan-dev
       # - run: cargo test
 
   format:
@@ -75,6 +77,8 @@ jobs:
       - uses: actions/checkout@v7
       - run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && echo "$HOME/.cargo/bin" >> $GITHUB_PATH
       - uses: Swatinem/rust-cache@v2
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y build-essential pkg-config libfontconfig1-dev libfreetype6-dev libxcb1-dev libxkbcommon-dev libxkbcommon-x11-dev libssl-dev libzstd-dev libvulkan-dev
       # - run: cargo clippy --all-targets --workspace -- -D warnings
 
   build_linux_amd64:
