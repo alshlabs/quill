@@ -25,7 +25,7 @@ use crate::tabs::TabKind;
 use crate::tabs::Tabs;
 use crate::theme;
 
-const SIDEBAR_MARGIN: Pixels = px(8.0);
+const SIDEBAR_MARGIN: Pixels = px(4.0);
 const SIDEBAR_MIN_WIDTH: Pixels = px(200.0);
 const SIDEBAR_DEFAULT_WIDTH: Pixels = px(250.0);
 const SIDEBAR_NAV_WIDTH: Pixels = px(42.0);
@@ -331,7 +331,7 @@ fn sidebar_nav_icon(
     })
     .hover(|this| this.bg(rgb(theme::colors::COLOR_GREY_875)))
     .child(
-      Icon::empty().data(icon).h(px(28.0)).w(px(28.0)), // .h_full().w_full()
+      Icon::empty().data(icon).h(px(24.0)).w(px(24.0)), // .h_full().w_full()
     )
 }
 
