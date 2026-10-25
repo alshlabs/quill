@@ -56,6 +56,10 @@ pub fn bootstrap<V, F, Fut>(
 
       cx.open_window(options, move |window, cx| {
         Theme::change(ThemeMode::Dark, Some(window), cx);
+        // The component library has no per-input placeholder color; this theme
+        // token is the only hook, and it also dims the library's other muted text.
+        Theme::global_mut(cx).muted_foreground =
+          rgb(crate::theme::colors::COLOR_INPUT_PLACEHOLDER_FOREGROUND).into();
 
         window_callback(window, cx);
 

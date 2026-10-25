@@ -89,7 +89,7 @@ impl PanelChat {
   ) -> Self {
     let input = cx.new(|cx| {
       TextareaState::new(window, cx)
-        .placeholder("Describe what to build")
+        .placeholder("Ask anything")
         .auto_grow(2, 12)
         .submit_on_enter(true)
     });
@@ -369,7 +369,7 @@ fn chat_entry(
   on_send: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
 ) -> Div {
   v_flex()
-    .bg(rgb(theme::colors::COLOR_INPUT_BACKGROUND))
+    // .bg(rgb(theme::colors::COLOR_INPUT_BACKGROUND))
     .border_1()
     .border_color(rgb(theme::colors::COLOR_INPUT_BORDER))
     .w_full()
@@ -442,13 +442,13 @@ fn toolbar(on_send: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static) -> Di
             .h(px(14.0))
             .bg(rgb(theme::colors::COLOR_INPUT_BORDER)),
         )
-        .child(
-          div()
-            .px(px(6.0))
-            .text_sm()
-            .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND))
-            .child("786K"),
-        )
+        // .child(
+        //   div()
+        //     .px(px(6.0))
+        //     .text_sm()
+        //     .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND))
+        //     .child("786K"),
+        // )
         .child(toolbar_button(ICON_SETTINGS, None)),
     )
     .child(
@@ -476,8 +476,8 @@ fn toolbar_button(
     .px(px(6.0))
     .rounded(px(6.0))
     .cursor_pointer()
-    .text_sm()
-    .text_color(rgb(theme::colors::COLOR_FOREGROUND))
+    .text_xs()
+    .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND))
     .hover(|this| this.bg(rgba(theme::colors::COLOR_TOOLBAR_HOVER_BACKGROUND_A)))
     .child(Icon::empty().data(icon).h(px(14.0)).w(px(14.0)))
     .children(label)
