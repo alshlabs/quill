@@ -91,13 +91,7 @@ impl Render for SidebarChats {
           .on_click(cx.listener(move |_, _: &ClickEvent, _, cx| {
             cx.emit(OpenChat(id.clone()));
           }))
-          .child(
-            div()
-              .flex_1()
-              .min_w_0()
-              .truncate()
-              .child(chat.name.clone()),
-          )
+          .child(div().flex_1().min_w_0().truncate().child(chat.name.clone()))
           .child(
             div()
               .flex_shrink_0()
