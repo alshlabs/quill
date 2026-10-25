@@ -1,0 +1,16 @@
+/target
+/assets/*
+!/assets/.gitkeep
+!/assets/*.bash
+.env
+quill.yaml
+
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+Icon
+

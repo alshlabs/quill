@@ -14,7 +14,9 @@ https://github.com/user-attachments/assets/8335baf6-c4ed-4f25-a554-4dc7140fc3c7
 
 <br>
 
-This is an LLM harness that uses a miniscule **40mb of ram** and runs at the framerate of your monitor (e.g. 144fps).
+This is an LLM harness that uses a miniscule **60mb of ram** and runs at the framerate of your monitor (e.g. 144fps).
+
+It's not even fully optimized yet.
 
 <div align="center">
 <img src="./.docs/usage-2026-20-25.png" />
