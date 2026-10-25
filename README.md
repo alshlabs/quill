@@ -38,6 +38,12 @@ I sort of view this as something of a case study on the fact that we can, in fac
 
 Also, these days, software has never been worse to use. Encarpification, call it what you will, but it's just really fun to make something super high quality.
 
+## Open Source
+
+I intend to open the source for this and open the project to contributors but am just not ready for that just yet.
+
+For now I will distribute pre-compiled binaries for the various platforms.
+
 ## Support The Development
 
 Donate with Wise:
