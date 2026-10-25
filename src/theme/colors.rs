@@ -10,6 +10,7 @@ pub const COLOR_BLACK_FAINT: u32 = 0x0d0d0e;
 // "Dark Modern" in its backgrounds. The `_A` constants carry an alpha channel
 // and must go through `rgba()`, not `rgb()`.
 pub const COLOR_FOREGROUND: u32 = 0xcccccc;
+pub const COLOR_SIDEBAR_FOREGROUND: u32 = 0xbebebe;
 pub const COLOR_DESCRIPTION_FOREGROUND: u32 = 0x9d9d9d;
 pub const COLOR_DISABLED_FOREGROUND_A: u32 = 0xcccccc80;
 pub const COLOR_ERROR_FOREGROUND: u32 = 0xf85149;
@@ -32,8 +33,8 @@ pub const COLOR_TOOLBAR_HOVER_BACKGROUND_A: u32 = 0x5a5d5e50;
 pub const COLOR_INPUT_BACKGROUND: u32 = 0x313131;
 pub const COLOR_INPUT_BORDER: u32 = 0x3c3c3c;
 pub const COLOR_INPUT_PLACEHOLDER_FOREGROUND: u32 = 0x6e6e6e;
-pub const COLOR_BUTTON_BACKGROUND: u32 = 0x0078d4;
-pub const COLOR_BUTTON_HOVER_BACKGROUND: u32 = 0x026ec1;
+pub const COLOR_BUTTON_BACKGROUND: u32 = 0x2d799f;
+pub const COLOR_BUTTON_HOVER_BACKGROUND: u32 = 0x296f92;
 pub const COLOR_BUTTON_FOREGROUND: u32 = 0xffffff;
 pub const COLOR_KEYBINDING_BACKGROUND: u32 = 0x2a2b2b;
 pub const COLOR_KEYBINDING_BORDER: u32 = 0x303131;

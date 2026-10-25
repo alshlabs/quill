@@ -81,8 +81,8 @@ impl Render for SidebarChats {
           .py(px(2.0))
           .rounded(px(6.0))
           .cursor_pointer()
-          .text_sm()
-          .text_color(rgb(theme::colors::COLOR_FOREGROUND))
+          .text_size(px(13.0))
+          .text_color(rgb(theme::colors::COLOR_SIDEBAR_FOREGROUND))
           .hover(|this| {
             this
               .bg(rgb(theme::colors::COLOR_LIST_HOVER_BACKGROUND))
@@ -96,7 +96,6 @@ impl Render for SidebarChats {
               .flex_1()
               .min_w_0()
               .truncate()
-              .text_sm()
               .child(chat.name.clone()),
           )
           .child(
@@ -126,11 +125,11 @@ fn new_chat_button() -> Stateful<Div> {
     .mt(px(4.0))
     .h(px(28.0))
     .justify_center()
-    .rounded(px(6.0))
+    .rounded(px(4.0))
     .cursor_pointer()
     .bg(rgb(theme::colors::COLOR_BUTTON_BACKGROUND))
-    .text_sm()
-    .font_weight(FontWeight::MEDIUM)
+    .text_size(px(13.0))
+    .font_weight(FontWeight::LIGHT)
     .text_color(rgb(theme::colors::COLOR_BUTTON_FOREGROUND))
     .hover(|this| this.bg(rgb(theme::colors::COLOR_BUTTON_HOVER_BACKGROUND)))
     .on_click(|_, window, cx| window.dispatch_action(NewChat.boxed_clone(), cx))
