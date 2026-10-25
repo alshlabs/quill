@@ -8,9 +8,22 @@ This technical choice has historically been practical for cross-platform develop
 
 But we are in the age of AI and, by Grayskull, there's no excuse to ship low quality applications.
 
+## Downloads
+
+|Platform|Link|
+|-|-|
+|Windows|https://github.com/alshlabs/quill/releases/latest/download/quill-windows-amd64.zip|
+|MacOS|https://github.com/alshlabs/quill/releases/latest/download/quill-macos-arm64.tar.gz|
+|Linux|<Building>|
+
 ## Introducing Quill
 
 https://github.com/user-attachments/assets/8335baf6-c4ed-4f25-a554-4dc7140fc3c7
+
+<div align="center">
+<img src="./.docs/screenshot-2026-10-25.png" />
+<div align="center"><i>Look familiar?</i></div>
+</div>
 
 <br>
 
