@@ -4,14 +4,14 @@ use gpui_kit::component::Icon;
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
+use crate::icons::ICON_ACCOUNT;
 use crate::icons::ICON_BRUSH;
+use crate::icons::ICON_CLOSE;
+use crate::icons::ICON_EXTENSIONS;
 use crate::icons::ICON_FEATHER;
-use crate::icons::ICON_FOLDER;
+use crate::icons::ICON_FOLDER_OPENED;
 use crate::icons::ICON_GEAR;
-use crate::icons::ICON_PERSON_CIRCLE;
-use crate::icons::ICON_PUZZLE;
 use crate::icons::ICON_SEARCH;
-use crate::icons::ICON_X;
 use crate::panels::about_blank::PanelAboutBlank;
 use crate::panels::panel_chat::ChatEvent;
 use crate::panels::panel_chat::PanelChat;
@@ -266,9 +266,9 @@ fn sidebar_nav(
       v_flex().items_center().w(SIDEBAR_NAV_WIDTH).children(
         [
           (SidebarView::Chats, ICON_FEATHER),
-          (SidebarView::Workspaces, ICON_FOLDER),
+          (SidebarView::Workspaces, ICON_FOLDER_OPENED),
           (SidebarView::Search, ICON_SEARCH),
-          (SidebarView::Plugins, ICON_PUZZLE),
+          (SidebarView::Plugins, ICON_EXTENSIONS),
         ]
         .into_iter()
         .enumerate()
@@ -303,7 +303,7 @@ fn sidebar_nav(
         .when(cfg!(debug_assertions), |this| {
           this.child(sidebar_nav_icon(4, false, ICON_BRUSH))
         })
-        .child(sidebar_nav_icon(5, false, ICON_PERSON_CIRCLE))
+        .child(sidebar_nav_icon(5, false, ICON_ACCOUNT))
         .child(sidebar_nav_icon(6, false, ICON_GEAR)),
     )
 }
@@ -331,7 +331,7 @@ fn sidebar_nav_icon(
     })
     .hover(|this| this.bg(rgb(theme::colors::COLOR_GREY_875)))
     .child(
-      Icon::empty().data(icon).h(px(22.0)).w(px(22.0)), // .h_full().w_full()
+      Icon::empty().data(icon).h(px(28.0)).w(px(28.0)), // .h_full().w_full()
     )
 }
 
@@ -517,7 +517,7 @@ fn tab_bar_item(
             tabs.update(cx, |tabs, cx| tabs.close(id, cx));
           }
         })
-        .child(Icon::empty().data(ICON_X).h(px(10.0)).w(px(10.0))),
+        .child(Icon::empty().data(ICON_CLOSE).h(px(10.0)).w(px(10.0))),
     )
 }
 

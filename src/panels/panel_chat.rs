@@ -10,12 +10,12 @@ use gpui_kit::*;
 
 use crate::components::AppChatBubbleUser;
 use crate::components::AppMarkdown;
+use crate::icons::ICON_ADD;
 use crate::icons::ICON_ARROW_UP;
-use crate::icons::ICON_CODE_SLASH;
+use crate::icons::ICON_CODE;
 use crate::icons::ICON_MIC;
-use crate::icons::ICON_PLUS_LG;
-use crate::icons::ICON_SLIDERS;
-use crate::icons::ICON_STARS;
+use crate::icons::ICON_SETTINGS;
+use crate::icons::ICON_SPARKLE;
 use crate::services::AppServices;
 use crate::services::agent;
 use crate::services::agent::AgentEvent;
@@ -433,9 +433,9 @@ fn toolbar(on_send: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static) -> Di
       h_flex()
         .items_center()
         .gap(px(2.0))
-        .child(toolbar_button(ICON_PLUS_LG, None))
-        .child(toolbar_button(ICON_CODE_SLASH, Some("Agent")))
-        .child(toolbar_button(ICON_STARS, Some("DeepSeek Flash")))
+        .child(toolbar_button(ICON_ADD, None))
+        .child(toolbar_button(ICON_CODE, Some("Agent")))
+        .child(toolbar_button(ICON_SPARKLE, Some("DeepSeek Flash")))
         .child(
           div()
             .w(px(1.0))
@@ -449,7 +449,7 @@ fn toolbar(on_send: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static) -> Di
             .text_color(rgb(theme::colors::COLOR_GREY_500))
             .child("786K"),
         )
-        .child(toolbar_button(ICON_SLIDERS, None)),
+        .child(toolbar_button(ICON_SETTINGS, None)),
     )
     .child(
       h_flex()

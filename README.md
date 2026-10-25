@@ -53,6 +53,10 @@ I sort of view this as something of a case study on the fact that we can, in fac
 
 Also, these days, software has never been worse to use. Encarpification, call it what you will, but it's just really fun to make something super high quality.
 
+## Credits & Licenses
+
+* UI Icons from [Codicons](https://github.com/microsoft/vscode-codicons) by Microsoft ([CC BY 4.0](https://github.com/microsoft/vscode-codicons/blob/main/LICENSE)).
+
 ## Support The Development
 
 Donate with Wise:

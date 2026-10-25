@@ -1,6 +1,6 @@
 use gpui_kit::*;
 
-use crate::icons::ICON_CHAT;
+use crate::icons::ICON_COMMENT;
 use crate::panels::panel_chat::PanelChat;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -31,7 +31,7 @@ impl TabKind {
 
   pub fn icon(&self) -> &'static [u8] {
     match self {
-      TabKind::Chat(_) => ICON_CHAT,
+      TabKind::Chat(_) => ICON_COMMENT,
     }
   }
 

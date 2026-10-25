@@ -7,13 +7,13 @@ use gpui_kit::*;
 
 use crate::app::NewChat;
 use crate::icons::ICON_ASTERISK;
-use crate::icons::ICON_BARS_STAGGERED;
-use crate::icons::ICON_CHAT;
 use crate::icons::ICON_COMMAND;
+use crate::icons::ICON_COMMENT;
 use crate::icons::ICON_FEATHER;
-use crate::icons::ICON_FOLDER_OPEN;
+use crate::icons::ICON_FOLDER_OPENED;
 use crate::icons::ICON_GEAR;
 use crate::icons::ICON_SHIFT;
+use crate::icons::ICON_THREE_BARS;
 use crate::theme;
 
 #[derive(IntoElement)]
@@ -78,17 +78,17 @@ impl RenderOnce for PanelAboutBlank {
         v_flex()
           .gap(px(8.0))
           .child(suggested_item(
-            ICON_CHAT,
+            ICON_COMMENT,
             "Start new chat",
             [key_icon(ICON_COMMAND), "N".into_any_element()],
           ))
           .child(suggested_item(
-            ICON_FOLDER_OPEN,
+            ICON_FOLDER_OPENED,
             "Open Workspace",
             [key_icon(ICON_COMMAND), "O".into_any_element()],
           ))
           .child(suggested_item(
-            ICON_BARS_STAGGERED,
+            ICON_THREE_BARS,
             "Show All Commands",
             [
               key_icon(ICON_SHIFT),
