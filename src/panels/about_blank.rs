@@ -1,0 +1,166 @@
+use std::rc::Rc;
+
+use gpui_kit::AnyElement;
+use gpui_kit::RenderOnce;
+use gpui_kit::base::h_flex;
+use gpui_kit::base::v_flex;
+use gpui_kit::component::Icon;
+use gpui_kit::*;
+
+use crate::app::NewChat;
+use crate::icons::ICON_ASTERISK;
+use crate::icons::ICON_BARS_STAGGERED;
+use crate::icons::ICON_CHAT;
+use crate::icons::ICON_COMMAND;
+use crate::icons::ICON_FEATHER;
+use crate::icons::ICON_FOLDER_OPEN;
+use crate::icons::ICON_GEAR;
+use crate::icons::ICON_SHIFT;
+use crate::theme;
+
+#[derive(IntoElement)]
+pub struct PanelAboutBlank {
+  id: ElementId,
+  children: Vec<AnyElement>,
+  on_click: Option<Rc<dyn Fn(&ClickEvent, &mut Window, &mut App)>>,
+  style: StyleRefinement,
+}
+
+impl PanelAboutBlank {
+  pub fn new(id: impl Into<ElementId>) -> Self {
+    Self {
+      id: id.into(),
+      children: Vec::new(),
+      on_click: None,
+      style: StyleRefinement::default(),
+    }
+  }
+}
+
+impl Styled for PanelAboutBlank {
+  fn style(&mut self) -> &mut StyleRefinement {
+    &mut self.style
+  }
+}
+
+impl ParentElement for PanelAboutBlank {
+  fn extend(
+    &mut self,
+    elements: impl IntoIterator<Item = AnyElement>,
+  ) {
+    self.children.extend(elements)
+  }
+}
+
+impl RenderOnce for PanelAboutBlank {
+  fn render(
+    self,
+    _window: &mut Window,
+    _cx: &mut App,
+  ) -> impl IntoElement {
+    v_flex()
+      .id(format!("panel_about_blank_{}", self.id))
+      .on_click(|event, window, cx| {
+        if event.click_count() == 2 {
+          window.dispatch_action(NewChat.boxed_clone(), cx);
+        }
+      })
+      .justify_center()
+      .items_center()
+      .w_full()
+      .h_full()
+      .text_color(rgb(theme::colors::COLOR_WHITE))
+      .child(
+        Icon::empty()
+          .data(ICON_ASTERISK)
+          .data(ICON_FEATHER)
+          .h(px(270.0))
+          .w(px(270.0))
+          .text_color(rgb(theme::colors::COLOR_BLACK_FAINT)),
+      )
+      .child(
+        v_flex()
+          .gap(px(8.0))
+          .child(suggested_item(
+            ICON_CHAT,
+            "Start new chat",
+            [key_icon(ICON_COMMAND), "N".into_any_element()],
+          ))
+          .child(suggested_item(
+            ICON_FOLDER_OPEN,
+            "Open Workspace",
+            [key_icon(ICON_COMMAND), "O".into_any_element()],
+          ))
+          .child(suggested_item(
+            ICON_BARS_STAGGERED,
+            "Show All Commands",
+            [
+              key_icon(ICON_SHIFT),
+              key_icon(ICON_COMMAND),
+              "P".into_any_element(),
+            ],
+          ))
+          .child(suggested_item(
+            ICON_GEAR,
+            "Configure Agents",
+            [key_icon(ICON_COMMAND), ",".into_any_element()],
+          )),
+      )
+  }
+}
+
+fn key_icon(icon: &'static [u8]) -> AnyElement {
+  Icon::empty()
+    .data(icon)
+    .h(px(11.0))
+    .w(px(11.0))
+    .into_any_element()
+}
+
+fn suggested_item(
+  icon: &'static [u8],
+  text: &str,
+  keys: impl IntoIterator<Item = AnyElement>,
+) -> Div {
+  h_flex()
+    .w(px(300.0))
+    .gap(px(8.0))
+    .items_center()
+    .child(
+      Icon::empty()
+        .data(icon)
+        .h(px(16.0))
+        .w(px(16.0))
+        .text_color(rgb(theme::colors::COLOR_GREY_500)),
+    )
+    .child(label(text))
+    .child(
+      h_flex()
+        .gap(px(4.0))
+        .children(keys.into_iter().map(|key| keycap().child(key))),
+    )
+}
+
+fn label(text: &str) -> Div {
+  div()
+    .flex_1()
+    .font_weight(FontWeight::LIGHT)
+    .text_sm()
+    .text_color(rgb(theme::colors::COLOR_GREY_400))
+    .child(text.to_string())
+}
+
+fn keycap() -> Div {
+  h_flex()
+    .justify_center()
+    .items_center()
+    .min_w(px(24.0))
+    .h(px(22.0))
+    .px(px(6.0))
+    .rounded(px(4.0))
+    .border_1()
+    .border_color(rgb(theme::colors::COLOR_GREY_825))
+    .bg(rgb(theme::colors::COLOR_GREY_900))
+    .text_xs()
+    .text_color(rgb(theme::colors::COLOR_GREY_400))
+}

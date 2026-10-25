@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rsl xmlns="https://rslstandard.org/rsl">
+  <content url="/">
+    <license>
+      <permits type="usage">search ai-input ai-index</permits>
+      <payment type="free">
+        <standard>https://polyformproject.org/licenses/noncommercial/1.0.0</standard>
+      </payment>
+    </license>
+    <license>
+      <permits type="usage">ai-train</permits>
+      <payment>
+        <custom>https://github.com/alshdavid</custom>
+      </payment>
+    </license>
+    <copyright type="person" contactUrl="https://github.com/alshdavid">David Alsh</copyright>
+  </content>
+</rsl>
