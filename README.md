@@ -25,7 +25,7 @@ _Note: I haven't wrapped this up in an `Quill.AppImage` or `Quill.App`, it's jus
 https://github.com/user-attachments/assets/8335baf6-c4ed-4f25-a554-4dc7140fc3c7
 
 <div align="center">
-<img src="./.docs/screenshot-2026-10-25.png" />
+<img src="./docs/screenshot-2026-10-25.png" />
 <div align="center"><i>Look familiar?</i></div>
 </div>
 
@@ -36,7 +36,7 @@ This is an LLM harness that uses a miniscule **60mb of ram** and runs at the fra
 It's not even fully optimized yet.
 
 <div align="center">
-<img src="./.docs/usage-2026-10-25.png" />
+<img src="./docs/usage-2026-10-25.png" />
 </div>
 
 ## But, How?
@@ -59,4 +59,4 @@ Also, these days, software has never been worse to use. Encarpification, call it
 
 Donate with Wise:
 
-[<img height="200px" src=".docs/donate.png" >](https://wise.com/pay/me/davidsama1)
+[<img height="200px" src="docs/donate.png" >](https://wise.com/pay/me/davidsama1)
