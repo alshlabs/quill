@@ -14,6 +14,7 @@ use super::window_decoration::{self};
 use crate::app::Update;
 use crate::app::UpdateState;
 use crate::icons::ICON_FEATHER;
+use crate::theme;
 use crate::theme::colors::COLOR_BRAND_FOREGROUND;
 use crate::theme::colors::COLOR_BUTTON_BACKGROUND;
 use crate::theme::colors::COLOR_BUTTON_FOREGROUND;
@@ -147,7 +148,7 @@ impl<V> AppRoot<V> {
                   .data(ICON_FEATHER)
                   .h(px(BRAND_LOGO_SIZE))
                   .w(px(BRAND_LOGO_SIZE))
-                  .text_color(rgb(COLOR_BRAND_FOREGROUND)),
+                  .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND)),
               ),
           ),
       )
