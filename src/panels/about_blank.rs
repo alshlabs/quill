@@ -90,7 +90,7 @@ fn body(id: &ElementId) -> Stateful<Div> {
           "Open Workspace",
           shortcut("O"),
         ))
-        .child(suggested_item(ICON_GEAR, "Configure Agents", shortcut(","))),
+        .child(suggested_item(ICON_GEAR, "Settings", shortcut(","))),
     )
 }
 
