@@ -40,6 +40,16 @@ impl TabKind {
     }
   }
 
+  pub fn is_dirty(
+    &self,
+    cx: &App,
+  ) -> bool {
+    match self {
+      TabKind::Chat(_) => false,
+      TabKind::Settings(settings) => settings.read(cx).is_dirty(),
+    }
+  }
+
   pub fn view(&self) -> AnyView {
     match self {
       TabKind::Chat(chat) => chat.clone().into(),

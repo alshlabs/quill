@@ -4,7 +4,6 @@ use gpui_kit::component::Icon;
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
-use crate::icons::ICON_ACCOUNT;
 use crate::icons::ICON_BRUSH;
 use crate::icons::ICON_CLOSE;
 use crate::icons::ICON_EXTENSIONS;
@@ -15,6 +14,7 @@ use crate::icons::ICON_SEARCH;
 use crate::panels::about_blank::PanelAboutBlank;
 use crate::panels::panel_chat::ChatEvent;
 use crate::panels::panel_chat::PanelChat;
+use crate::panels::panel_settings::DirtyChanged;
 use crate::panels::panel_settings::PanelSettings;
 use crate::sidebars::sidebar_chats::OpenChat;
 use crate::sidebars::sidebar_chats::SidebarChats;
@@ -31,8 +31,12 @@ const SIDEBAR_MIN_WIDTH: Pixels = px(200.0);
 const SIDEBAR_DEFAULT_WIDTH: Pixels = px(250.0);
 const SIDEBAR_NAV_WIDTH: Pixels = px(42.0);
 const TAB_BAR_HEIGHT: Pixels = px(32.0);
+const TAB_GROUP: &str = "tab";
 
-actions!(quill, [NewChat, OpenSettings, Save, CloseTab, NextTab, PrevTab]);
+actions!(
+  quill,
+  [NewChat, OpenSettings, Save, CloseTab, NextTab, PrevTab]
+);
 
 pub fn init(cx: &mut App) {
   cx.bind_keys([
@@ -154,6 +158,8 @@ impl AppRoot {
     }
 
     let settings = cx.new(|cx| PanelSettings::new(window, cx));
+    cx.subscribe(&settings, |_, _, _: &DirtyChanged, cx| cx.notify())
+      .detach();
     self.tabs.update(cx, |tabs, cx| {
       tabs.open(TabKind::Settings(settings), cx);
     });
@@ -519,9 +525,11 @@ fn tab_bar_item(
   cx: &App,
 ) -> Stateful<Div> {
   let id = tab.id;
+  let dirty = tab.kind.is_dirty(cx);
 
   h_flex()
     .id(id.element_id("tab"))
+    .group(TAB_GROUP)
     .h_full()
     .pl(px(12.0))
     .pr(px(6.0))
@@ -564,6 +572,7 @@ fn tab_bar_item(
     .child(
       div()
         .id(id.element_id("tab-close"))
+        .relative()
         .flex()
         .items_center()
         .justify_center()
@@ -578,7 +587,36 @@ fn tab_bar_item(
             tabs.update(cx, |tabs, cx| tabs.close(id, cx));
           }
         })
-        .child(Icon::empty().data(ICON_CLOSE).h(px(10.0)).w(px(10.0))),
+        .map(|this| {
+          let close = Icon::empty().data(ICON_CLOSE).h(px(10.0)).w(px(10.0));
+          if !dirty {
+            return this.child(close);
+          }
+          let dot_color = if active {
+            theme::colors::COLOR_TAB_ACTIVE_FOREGROUND
+          } else {
+            theme::colors::COLOR_TAB_INACTIVE_FOREGROUND
+          };
+          this
+            .child(
+              div()
+                .size(px(8.0))
+                .rounded_full()
+                .bg(rgb(dot_color))
+                .group_hover(TAB_GROUP, |this| this.invisible()),
+            )
+            .child(
+              div()
+                .absolute()
+                .inset_0()
+                .flex()
+                .items_center()
+                .justify_center()
+                .invisible()
+                .group_hover(TAB_GROUP, |this| this.visible())
+                .child(close),
+            )
+        }),
     )
 }
 
