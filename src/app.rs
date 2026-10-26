@@ -35,7 +35,15 @@ const TAB_GROUP: &str = "tab";
 
 actions!(
   quill,
-  [NewChat, OpenSettings, Save, CloseTab, NextTab, PrevTab]
+  [
+    NewChat,
+    OpenSettings,
+    Save,
+    CloseTab,
+    NextTab,
+    PrevTab,
+    Update
+  ]
 );
 
 pub fn init(cx: &mut App) {

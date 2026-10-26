@@ -40,8 +40,12 @@ use gpui_kit::*;
 use super::window_controls::WINDOW_CONTROLS;
 use super::window_controls::WINDOW_CONTROLS_WIDTH;
 use super::window_decoration::{self};
+use crate::app::Update;
 use crate::icons::ICON_FEATHER;
 use crate::theme::colors::COLOR_BRAND_FOREGROUND;
+use crate::theme::colors::COLOR_BUTTON_BACKGROUND;
+use crate::theme::colors::COLOR_BUTTON_FOREGROUND;
+use crate::theme::colors::COLOR_BUTTON_HOVER_BACKGROUND;
 use crate::theme::colors::COLOR_FOREGROUND;
 use crate::theme::colors::COLOR_GREY_50;
 use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
@@ -54,6 +58,13 @@ const BRAND_LOGO_SIZE: f32 = 16.;
 /// `SIDEBAR_NAV_WIDTH` in `app.rs`).
 const BRAND_LOGO_INSET: f32 = 26. - BRAND_LOGO_SIZE / 2.;
 const BOUNDARY_THICKNESS: f32 = 1.;
+
+/// Fixed rather than sized to its label, because the drag strip has to reserve
+/// the button's width up front to stay out from under it.
+const UPDATE_BUTTON_WIDTH: f32 = 64.;
+const UPDATE_BUTTON_HEIGHT: f32 = 24.;
+const UPDATE_BUTTON_GAP: f32 = 8.;
+const UPDATE_BUTTON_RESERVED_WIDTH: f32 = UPDATE_BUTTON_WIDTH + UPDATE_BUTTON_GAP;
 
 /// Marks where the shell's strip ends, in the shell's own layer.
 ///
@@ -127,7 +138,9 @@ impl<V> AppRoot<V> {
       .right_0()
       .flex()
       .flex_row()
+      .items_center()
       .h(px(TITLE_BAR_HEIGHT))
+      .child(update_button())
       .when(show_controls, |this| this.children(WINDOW_CONTROLS))
   }
 
@@ -175,8 +188,37 @@ impl<V> AppRoot<V> {
               ),
           ),
       )
+      .child(
+        div()
+          .flex_shrink_0()
+          .w(px(UPDATE_BUTTON_RESERVED_WIDTH))
+          .h_full(),
+      )
       .when(!window.is_fullscreen(), |this| {
         this.child(div().flex_shrink_0().w(px(WINDOW_CONTROLS_WIDTH)).h_full())
       })
   }
+}
+
+fn update_button() -> Stateful<Div> {
+  div()
+    .id("title-bar-update")
+    .flex()
+    .flex_shrink_0()
+    .justify_center()
+    .items_center()
+    .w(px(UPDATE_BUTTON_WIDTH))
+    .h(px(UPDATE_BUTTON_HEIGHT))
+    .mr(px(UPDATE_BUTTON_GAP))
+    .rounded(px(6.))
+    .cursor_pointer()
+    .text_xs()
+    .bg(rgb(COLOR_BUTTON_BACKGROUND))
+    .text_color(rgb(COLOR_BUTTON_FOREGROUND))
+    .hover(|this| this.bg(rgb(COLOR_BUTTON_HOVER_BACKGROUND)))
+    .on_click(|_, window, cx| {
+      cx.stop_propagation();
+      window.dispatch_action(Update.boxed_clone(), cx);
+    })
+    .child("Update")
 }

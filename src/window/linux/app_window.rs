@@ -11,8 +11,12 @@ use gpui_kit::*;
 
 use super::window_controls::WindowControl;
 use super::window_decoration::{self};
+use crate::app::Update;
 use crate::icons::ICON_FEATHER;
 use crate::theme::colors::COLOR_BRAND_FOREGROUND;
+use crate::theme::colors::COLOR_BUTTON_BACKGROUND;
+use crate::theme::colors::COLOR_BUTTON_FOREGROUND;
+use crate::theme::colors::COLOR_BUTTON_HOVER_BACKGROUND;
 use crate::theme::colors::COLOR_FOREGROUND;
 use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
 use crate::theme::colors::COLOR_WINDOW_INACTIVE_BACKGROUND;
@@ -20,6 +24,9 @@ use crate::theme::colors::COLOR_WINDOW_INACTIVE_BACKGROUND;
 const TITLE_BAR_HEIGHT: f32 = 42.;
 const BRAND_LOGO_SIZE: f32 = 24.;
 const BRAND_LOGO_INSET: f32 = 26. - BRAND_LOGO_SIZE / 2.;
+
+const UPDATE_BUTTON_HEIGHT: f32 = 24.;
+const UPDATE_BUTTON_GAP: f32 = 8.;
 
 const WINDOW_RADIUS: f32 = 12.;
 
@@ -143,6 +150,7 @@ impl<V> AppRoot<V> {
               ),
           ),
       )
+      .child(update_button())
       .when(is_client_decorated, |this| {
         this
           .child(WindowControl::Minimize)
@@ -150,4 +158,30 @@ impl<V> AppRoot<V> {
           .child(WindowControl::Close)
       })
   }
+}
+
+fn update_button() -> Stateful<Div> {
+  div()
+    .id("title-bar-update")
+    .flex()
+    .flex_shrink_0()
+    .items_center()
+    .h(px(UPDATE_BUTTON_HEIGHT))
+    .px(px(10.))
+    .mr(px(UPDATE_BUTTON_GAP))
+    .rounded(px(6.))
+    .cursor_pointer()
+    .text_xs()
+    .bg(rgb(COLOR_BUTTON_BACKGROUND))
+    .text_color(rgb(COLOR_BUTTON_FOREGROUND))
+    .hover(|this| this.bg(rgb(COLOR_BUTTON_HOVER_BACKGROUND)))
+    .on_mouse_down(MouseButton::Left, |_, window, cx| {
+      window.prevent_default();
+      cx.stop_propagation();
+    })
+    .on_click(|_, window, cx| {
+      cx.stop_propagation();
+      window.dispatch_action(Update.boxed_clone(), cx);
+    })
+    .child("Update")
 }
