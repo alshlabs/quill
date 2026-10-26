@@ -41,9 +41,11 @@ https://github.com/user-attachments/assets/8335baf6-c4ed-4f25-a554-4dc7140fc3c7
 
 ## How does this work?
 
-Quill leverages the work done by the [Zed editor](https://zed.dev/), utilizing their cross platform [gpui-kit](https://crates.io/crates/gpui-kit).
+Quill uses the work done by the [Zed editor](https://zed.dev/), utilizing their cross platform [gpui-kit](https://crates.io/crates/gpui-kit).
 
 Simply put, gpui leverages native APIs (Metal, Vulkan and DirectX) to draw the UI. You can think of it as using a game engine to render a UI, except it only renders frames when things are moving, ensuring power usage / battery life is unaffected.
+
+It renders frames at your screen's refresh rate (e.g. 144fps) so the experience is buttery smooth.
 
 ## Motivation for this project
 
@@ -79,6 +81,6 @@ This is a weekend project of mine. If you genuinely enjoy it and want to see mor
 <div align="center">
 <a href="https://wise.com/pay/me/davidsama1">
 <img src="docs/donate.png" />
-<div align="center"><i>Donate with Wise</i></div>
+<div width="300px" align="center"><i>Donate with Wise</i></div>
 </a>
 </div>
