@@ -10,7 +10,6 @@ use gpui_kit::*;
 
 use crate::app::Save;
 use crate::services::AppServices;
-use crate::services::agent;
 use crate::services::config::Config;
 use crate::theme;
 
@@ -94,9 +93,6 @@ impl PanelSettings {
     self.update_dirty(cx);
 
     let config = Config::from_yaml(&contents, &self.config_path);
-    if let Ok(config) = &config {
-      agent::apply_config(config);
-    }
     self.config_error = config_error(&config);
     AppServices::obtain().set_config(config);
     cx.notify();

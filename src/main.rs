@@ -30,7 +30,7 @@ fn main() -> anyhow::Result<()> {
 
   dbg!(&config);
 
-  services::agent::init(config.as_ref().ok())?;
+  services::agent::init()?;
 
   AppServices::new(config_path, config).register_global()?;
 

@@ -23,11 +23,14 @@ use goose::config::GooseMode;
 use goose::config::PermissionManager;
 use goose::conversation::message::Message;
 use goose::model_config::model_config_from_user_config;
-use goose::providers::create_with_named_model;
+use goose::providers::api_client::ApiClient;
+use goose::providers::api_client::AuthMethod;
+use goose::providers::openai::OpenAiProviderBuilder;
 use goose::session::Session;
 use goose::session::SessionManager;
 use goose::session::SessionNameUpdate;
 use goose::session::session_manager::SessionType;
+use goose::session_context::session_id_request_builder;
 use rmcp::model::Role;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::UnboundedReceiver;
@@ -35,9 +38,11 @@ use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::mpsc::unbounded_channel;
 
 use crate::services::config::AgentConfig;
-use crate::services::config::Config;
 
 const PROVIDER: &str = "openai";
+// Unregistered so goose never rebuilds it from its own config: subagents fall
+// back to reusing the parent's provider instead of an unconfigured "openai".
+const PROVIDER_NAME: &str = "quill";
 const SESSION_NAME: &str = "quill";
 const UNTITLED_CHAT: &str = "Untitled chat";
 const AGENT_STACK_SIZE: usize = 32 * 1024 * 1024;
@@ -53,12 +58,10 @@ static RUNTIME: OnceLock<Runtime> = OnceLock::new();
 
 /// Configures goose and starts the runtime every agent and storage call runs on.
 /// Must run before any other goose code: goose reads its environment once.
-pub fn init(config: Option<&Config>) -> Result<()> {
-  // goose resolves the OpenAI-compatible endpoint and key from the process
-  // environment; edition 2024 marks env mutation unsafe.
+pub fn init() -> Result<()> {
+  // Edition 2024 marks env mutation unsafe.
   unsafe {
     std::env::set_var("GOOSE_DISABLE_KEYRING", "1");
-    std::env::set_var("GOOSE_PROVIDER", PROVIDER);
 
     // goose reads its storage root once, on first use, and only accepts an
     // absolute path; anything else falls back to goose's own directories.
@@ -67,9 +70,6 @@ pub fn init(config: Option<&Config>) -> Result<()> {
     }
   }
 
-  if let Some(config) = config {
-    apply_config(config);
-  }
   register_builtin_extensions(goose_mcp::BUILTIN_EXTENSIONS.clone());
 
   let runtime = tokio::runtime::Builder::new_multi_thread()
@@ -81,23 +81,6 @@ pub fn init(config: Option<&Config>) -> Result<()> {
   RUNTIME
     .set(runtime)
     .map_err(|_| anyhow!("goose is already initialized"))
-}
-
-/// Points goose at the first configured model. goose reads these whenever it
-/// creates a provider, so a change reaches agents created afterwards.
-pub fn apply_config(config: &Config) {
-  let Some(model) = config.models.first() else {
-    return;
-  };
-  // Also runs while goose is live: its reads go through `std::env`, which
-  // shares a lock with `set_var`, but C code reading the environment does not.
-  unsafe {
-    std::env::set_var("GOOSE_MODEL", &model.model_id);
-    std::env::set_var("OPENAI_HOST", &model.provider_host);
-    std::env::set_var("GOOSE_PROVIDER__HOST", &model.provider_host);
-    std::env::set_var("OPENAI_API_KEY", &model.provider_token);
-    std::env::set_var("GOOSE_PROVIDER__API_KEY", &model.provider_token);
-  }
 }
 
 fn runtime() -> &'static Runtime {
@@ -206,7 +189,7 @@ fn display_name(session: &Session) -> String {
 }
 
 pub struct AgentHarnessOptions {
-  pub model: String,
+  pub model: AgentConfig,
   pub working_dir: Option<PathBuf>,
   /// Resume this goose session instead of starting a new one.
   pub session_id: Option<String>,
@@ -215,7 +198,7 @@ pub struct AgentHarnessOptions {
 impl From<&AgentConfig> for AgentHarnessOptions {
   fn from(config: &AgentConfig) -> Self {
     Self {
-      model: config.model_id.clone(),
+      model: config.clone(),
       working_dir: None,
       session_id: None,
     }
@@ -334,7 +317,7 @@ async fn open_session(
 ) -> Result<Session> {
   let scratch = scratch_dir()?;
   let session = match &options.session_id {
-    Some(id) => resume_session(agent, id).await?,
+    Some(id) => resume_session(agent, &options.model, id).await?,
     None => {
       let working_dir = options.working_dir.clone().unwrap_or(scratch.clone());
       create_session(agent, &options.model, working_dir).await?
@@ -355,22 +338,57 @@ async fn open_session(
 
 async fn resume_session(
   agent: &Arc<Agent>,
+  model: &AgentConfig,
   id: &str,
 ) -> Result<Session> {
   let session = agent.config.session_manager.get_session(id, false).await?;
-  agent.restore_provider_from_session(&session).await?;
+  set_provider(agent, model, &session.id).await?;
+  agent
+    .update_goose_mode(session.goose_mode, &session.id)
+    .await?;
   agent.load_extensions_from_session(&session).await;
   Ok(session)
 }
 
+async fn set_provider(
+  agent: &Agent,
+  model: &AgentConfig,
+  session_id: &str,
+) -> Result<()> {
+  let auth = if model.provider_token.is_empty() {
+    AuthMethod::NoAuth
+  } else {
+    AuthMethod::BearerToken(model.provider_token.clone())
+  };
+  let client = ApiClient::new_with_tls(model.provider_host.clone(), auth, None)?
+    .with_request_builder(session_id_request_builder());
+  let provider = OpenAiProviderBuilder::new(client)
+    .name(PROVIDER_NAME)
+    .preserve_thinking_context(!is_openai_host(&model.provider_host))
+    .build();
+  let model_config = model_config_from_user_config(PROVIDER, &model.model_id)?;
+  agent
+    .update_provider(Arc::new(provider), model_config, session_id)
+    .await
+}
+
+// Matches goose's own OpenAI provider, which preserves thinking context for
+// every OpenAI-compatible host except OpenAI itself.
+fn is_openai_host(host: &str) -> bool {
+  let authority = host.split_once("://").map_or(host, |(_, rest)| rest);
+  let hostname = authority
+    .split(['/', ':', '?'])
+    .next()
+    .unwrap_or_default()
+    .to_ascii_lowercase();
+  hostname == "api.openai.com" || hostname.ends_with(".api.openai.com")
+}
+
 async fn create_session(
   agent: &Agent,
-  model: &str,
+  model: &AgentConfig,
   working_dir: PathBuf,
 ) -> Result<Session> {
-  let provider = create_with_named_model(PROVIDER, Vec::new()).await?;
-  let model_config = model_config_from_user_config(PROVIDER, model)?;
-
   let session = agent
     .config
     .session_manager
@@ -382,9 +400,7 @@ async fn create_session(
     )
     .await?;
 
-  agent
-    .update_provider(provider, model_config, &session.id)
-    .await?;
+  set_provider(agent, model, &session.id).await?;
 
   let mut extensions: Vec<_> = PLATFORM_EXTENSIONS
     .values()
