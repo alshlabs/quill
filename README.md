@@ -80,7 +80,7 @@ This is a weekend project of mine. If you genuinely enjoy it and want to see mor
 
 <div align="center">
 <a href="https://wise.com/pay/me/davidsama1">
-<img src="docs/donate.png" />
-<div width="300px" align="center"><i>Donate with Wise</i></div>
+<img width="300px" src="docs/donate.png" />
+<div align="center"><i>Donate with Wise</i></div>
 </a>
 </div>
