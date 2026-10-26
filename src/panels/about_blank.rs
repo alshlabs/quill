@@ -12,8 +12,6 @@ use crate::icons::ICON_COMMENT;
 use crate::icons::ICON_FEATHER;
 use crate::icons::ICON_FOLDER_OPENED;
 use crate::icons::ICON_GEAR;
-use crate::icons::ICON_SHIFT;
-use crate::icons::ICON_THREE_BARS;
 use crate::theme;
 
 #[derive(IntoElement)]
@@ -85,48 +83,24 @@ fn body(id: &ElementId) -> Stateful<Div> {
         .child(suggested_item(
           ICON_COMMENT,
           "Start new chat",
-          shortcut(&[], "N"),
+          shortcut("N"),
         ))
         .child(suggested_item(
           ICON_FOLDER_OPENED,
           "Open Workspace",
-          shortcut(&[], "O"),
+          shortcut("O"),
         ))
-        .child(suggested_item(
-          ICON_THREE_BARS,
-          "Show All Commands",
-          shortcut(&[Modifier::Shift], "P"),
-        ))
-        .child(suggested_item(
-          ICON_GEAR,
-          "Configure Agents",
-          shortcut(&[], ","),
-        )),
+        .child(suggested_item(ICON_GEAR, "Configure Agents", shortcut(","))),
     )
 }
 
-enum Modifier {
-  Shift,
-}
-
-fn shortcut(
-  modifiers: &[Modifier],
-  key: &'static str,
-) -> Vec<AnyElement> {
-  let mut keys = Vec::new();
-  if cfg!(target_os = "macos") {
-    keys.extend(modifiers.iter().map(|modifier| match modifier {
-      Modifier::Shift => key_icon(ICON_SHIFT),
-    }));
-    keys.push(key_icon(ICON_COMMAND));
+fn shortcut(key: &'static str) -> [AnyElement; 2] {
+  let modifier = if cfg!(target_os = "macos") {
+    key_icon(ICON_COMMAND)
   } else {
-    keys.push("Ctrl".into_any_element());
-    keys.extend(modifiers.iter().map(|modifier| match modifier {
-      Modifier::Shift => "Shift".into_any_element(),
-    }));
-  }
-  keys.push(key.into_any_element());
-  keys
+    "Ctrl".into_any_element()
+  };
+  [modifier, key.into_any_element()]
 }
 
 fn key_icon(icon: &'static [u8]) -> AnyElement {
