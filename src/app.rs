@@ -32,12 +32,13 @@ const SIDEBAR_DEFAULT_WIDTH: Pixels = px(250.0);
 const SIDEBAR_NAV_WIDTH: Pixels = px(42.0);
 const TAB_BAR_HEIGHT: Pixels = px(32.0);
 
-actions!(quill, [NewChat, OpenSettings, CloseTab, NextTab, PrevTab]);
+actions!(quill, [NewChat, OpenSettings, Save, CloseTab, NextTab, PrevTab]);
 
 pub fn init(cx: &mut App) {
   cx.bind_keys([
     KeyBinding::new("cmd-n", NewChat, None),
     KeyBinding::new("cmd-w", CloseTab, None),
+    KeyBinding::new("secondary-s", Save, None),
     KeyBinding::new("ctrl-tab", NextTab, None),
     KeyBinding::new("ctrl-shift-tab", PrevTab, None),
   ]);
@@ -331,7 +332,7 @@ fn sidebar_nav(
         .when(cfg!(debug_assertions), |this| {
           this.child(sidebar_nav_icon(4, false, ICON_BRUSH))
         })
-        .child(sidebar_nav_icon(5, false, ICON_ACCOUNT))
+        // .child(sidebar_nav_icon(5, false, ICON_ACCOUNT))
         .child(
           sidebar_nav_icon(6, false, ICON_GEAR)
             .on_click(|_, window, cx| window.dispatch_action(OpenSettings.boxed_clone(), cx)),
