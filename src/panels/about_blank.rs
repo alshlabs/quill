@@ -54,55 +54,59 @@ impl RenderOnce for PanelAboutBlank {
     _window: &mut Window,
     _cx: &mut App,
   ) -> impl IntoElement {
-    v_flex()
-      .id(format!("panel_about_blank_{}", self.id))
-      .on_click(|event, window, cx| {
-        if event.click_count() == 2 {
-          window.dispatch_action(NewChat.boxed_clone(), cx);
-        }
-      })
-      .justify_center()
-      .items_center()
-      .w_full()
-      .h_full()
-      .text_color(rgb(theme::colors::COLOR_FOREGROUND))
-      .child(
-        Icon::empty()
-          .data(ICON_ASTERISK)
-          .data(ICON_FEATHER)
-          .h(px(270.0))
-          .w(px(270.0))
-          .text_color(rgb(theme::colors::COLOR_LETTERPRESS)),
-      )
-      .child(
-        v_flex()
-          .gap(px(8.0))
-          .child(suggested_item(
-            ICON_COMMENT,
-            "Start new chat",
-            [key_icon(ICON_COMMAND), "N".into_any_element()],
-          ))
-          .child(suggested_item(
-            ICON_FOLDER_OPENED,
-            "Open Workspace",
-            [key_icon(ICON_COMMAND), "O".into_any_element()],
-          ))
-          .child(suggested_item(
-            ICON_THREE_BARS,
-            "Show All Commands",
-            [
-              key_icon(ICON_SHIFT),
-              key_icon(ICON_COMMAND),
-              "P".into_any_element(),
-            ],
-          ))
-          .child(suggested_item(
-            ICON_GEAR,
-            "Configure Agents",
-            [key_icon(ICON_COMMAND), ",".into_any_element()],
-          )),
-      )
+    body(&self.id)
   }
+}
+
+fn body(id: &ElementId) -> Stateful<Div> {
+  v_flex()
+    .id(format!("panel_about_blank_{}", id))
+    .on_click(|event, window, cx| {
+      if event.click_count() == 2 {
+        window.dispatch_action(NewChat.boxed_clone(), cx);
+      }
+    })
+    .justify_center()
+    .items_center()
+    .w_full()
+    .h_full()
+    .text_color(rgb(theme::colors::COLOR_FOREGROUND))
+    .child(
+      Icon::empty()
+        .data(ICON_ASTERISK)
+        .data(ICON_FEATHER)
+        .h(px(270.0))
+        .w(px(270.0))
+        .text_color(rgb(theme::colors::COLOR_LETTERPRESS)),
+    )
+    .child(
+      v_flex()
+        .gap(px(8.0))
+        .child(suggested_item(
+          ICON_COMMENT,
+          "Start new chat",
+          [key_icon(ICON_COMMAND), "N".into_any_element()],
+        ))
+        .child(suggested_item(
+          ICON_FOLDER_OPENED,
+          "Open Workspace",
+          [key_icon(ICON_COMMAND), "O".into_any_element()],
+        ))
+        .child(suggested_item(
+          ICON_THREE_BARS,
+          "Show All Commands",
+          [
+            key_icon(ICON_SHIFT),
+            key_icon(ICON_COMMAND),
+            "P".into_any_element(),
+          ],
+        ))
+        .child(suggested_item(
+          ICON_GEAR,
+          "Configure Agents",
+          [key_icon(ICON_COMMAND), ",".into_any_element()],
+        )),
+    )
 }
 
 fn key_icon(icon: &'static [u8]) -> AnyElement {
