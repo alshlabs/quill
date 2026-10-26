@@ -15,7 +15,6 @@ use crate::app::Update;
 use crate::app::UpdateState;
 use crate::icons::ICON_FEATHER;
 use crate::theme;
-use crate::theme::colors::COLOR_BRAND_FOREGROUND;
 use crate::theme::colors::COLOR_BUTTON_BACKGROUND;
 use crate::theme::colors::COLOR_BUTTON_FOREGROUND;
 use crate::theme::colors::COLOR_BUTTON_HOVER_BACKGROUND;
