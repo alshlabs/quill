@@ -65,6 +65,7 @@ Additionally, the technology powering Quill means that adding features is not so
 * UI Icons from [Font Awesome Free](https://github.com/FortAwesome/Font-Awesome) by Fonticons, Inc. ([CC BY 4.0](https://fontawesome.com/license/free)).
 * UI Icons from [Bootstrap Icons](https://github.com/twbs/icons) by The Bootstrap Authors ([MIT](https://github.com/twbs/icons/blob/main/LICENSE)).
 * UI framework [GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui) from the [Zed](https://zed.dev) editor by Zed Industries ([Apache 2.0](https://github.com/zed-industries/zed/blob/main/crates/gpui/LICENSE-APACHE)).
+* Agent harness [goose](https://github.com/aaif-goose/goose) by the [Agentic AI Foundation](https://aaif.io/) ([Apache 2.0](https://github.com/aaif-goose/goose/blob/main/LICENSE)).
 
 ## License
 
