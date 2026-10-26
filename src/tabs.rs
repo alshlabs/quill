@@ -1,7 +1,9 @@
 use gpui_kit::*;
 
 use crate::icons::ICON_COMMENT;
+use crate::icons::ICON_GEAR;
 use crate::panels::panel_chat::PanelChat;
+use crate::panels::panel_settings::PanelSettings;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct TabId(u64);
@@ -17,6 +19,7 @@ impl TabId {
 
 pub enum TabKind {
   Chat(Entity<PanelChat>),
+  Settings,
 }
 
 impl TabKind {
@@ -26,18 +29,21 @@ impl TabKind {
   ) -> SharedString {
     match self {
       TabKind::Chat(chat) => chat.read(cx).title(),
+      TabKind::Settings => "Settings".into(),
     }
   }
 
   pub fn icon(&self) -> &'static [u8] {
     match self {
       TabKind::Chat(_) => ICON_COMMENT,
+      TabKind::Settings => ICON_GEAR,
     }
   }
 
-  pub fn view(&self) -> AnyView {
+  pub fn view(&self) -> AnyElement {
     match self {
-      TabKind::Chat(chat) => chat.clone().into(),
+      TabKind::Chat(chat) => chat.clone().into_any_element(),
+      TabKind::Settings => PanelSettings::new().into_any_element(),
     }
   }
 }

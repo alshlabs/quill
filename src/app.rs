@@ -31,7 +31,7 @@ const SIDEBAR_DEFAULT_WIDTH: Pixels = px(250.0);
 const SIDEBAR_NAV_WIDTH: Pixels = px(42.0);
 const TAB_BAR_HEIGHT: Pixels = px(32.0);
 
-actions!(quill, [NewChat, CloseTab, NextTab, PrevTab]);
+actions!(quill, [NewChat, OpenSettings, CloseTab, NextTab, PrevTab]);
 
 pub fn init(cx: &mut App) {
   cx.bind_keys([
@@ -113,6 +113,7 @@ impl AppRoot {
         TabKind::Chat(chat) => {
           (chat.read(cx).session_id() == Some(session_id.as_str())).then_some(tab.id)
         }
+        TabKind::Settings => None,
       });
     if let Some(id) = open_tab {
       self.tabs.update(cx, |tabs, cx| tabs.activate(id, cx));
@@ -130,6 +131,27 @@ impl AppRoot {
     cx: &mut Context<Self>,
   ) {
     self.add_chat(window, cx);
+  }
+
+  fn open_settings(
+    &mut self,
+    _: &OpenSettings,
+    _window: &mut Window,
+    cx: &mut Context<Self>,
+  ) {
+    self.tabs.update(cx, |tabs, cx| {
+      let open_tab = tabs
+        .items()
+        .iter()
+        .find(|tab| matches!(tab.kind, TabKind::Settings))
+        .map(|tab| tab.id);
+      match open_tab {
+        Some(id) => tabs.activate(id, cx),
+        None => {
+          tabs.open(TabKind::Settings, cx);
+        }
+      }
+    });
   }
 
   fn close_tab(
@@ -185,6 +207,7 @@ impl Render for AppRoot {
     v_flex()
       .track_focus(&self.focus_handle)
       .on_action(cx.listener(Self::new_chat))
+      .on_action(cx.listener(Self::open_settings))
       .on_action(cx.listener(Self::close_tab))
       .on_action(cx.listener(Self::next_tab))
       .on_action(cx.listener(Self::prev_tab))
@@ -305,7 +328,10 @@ fn sidebar_nav(
           this.child(sidebar_nav_icon(4, false, ICON_BRUSH))
         })
         .child(sidebar_nav_icon(5, false, ICON_ACCOUNT))
-        .child(sidebar_nav_icon(6, false, ICON_GEAR)),
+        .child(
+          sidebar_nav_icon(6, false, ICON_GEAR)
+            .on_click(|_, window, cx| window.dispatch_action(OpenSettings.boxed_clone(), cx)),
+        ),
     )
 }
 
