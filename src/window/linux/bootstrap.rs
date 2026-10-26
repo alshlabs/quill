@@ -58,6 +58,7 @@ pub fn bootstrap<V, F, Fut>(
         // token is the only hook, and it also dims the library's other muted text.
         Theme::global_mut(cx).muted_foreground =
           rgb(crate::theme::colors::COLOR_INPUT_PLACEHOLDER_FOREGROUND).into();
+        Theme::global_mut(cx).popover = rgb(crate::theme::colors::COLOR_PANEL_BACKGROUND).into();
         let highlight_theme = Arc::make_mut(&mut Theme::global_mut(cx).highlight_theme);
         highlight_theme.style.editor_background =
           Some(rgb(crate::theme::colors::COLOR_EDITOR_BACKGROUND).into());

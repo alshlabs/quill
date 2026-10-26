@@ -4,12 +4,19 @@ use anyhow::Context as _;
 use gpui_kit::base::h_flex;
 use gpui_kit::base::v_flex;
 use gpui_kit::component::Icon;
+use gpui_kit::component::Sizable as _;
+use gpui_kit::component::button::Button;
+use gpui_kit::component::button::ButtonCustomVariant;
+use gpui_kit::component::button::ButtonVariants as _;
 use gpui_kit::component::input::InputEvent;
 use gpui_kit::component::input::Textarea;
 use gpui_kit::component::input::TextareaState;
+use gpui_kit::component::menu::DropdownMenu as _;
+use gpui_kit::component::menu::PopupMenuItem;
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
+use crate::app::OpenSettings;
 use crate::components::AppChatBubbleUser;
 use crate::components::AppMarkdown;
 use crate::icons::ICON_ADD;
@@ -25,6 +32,7 @@ use crate::services::agent::AgentHarness;
 use crate::services::agent::AgentHarnessOptions;
 use crate::services::agent::HistoryMessage;
 use crate::services::agent::HistoryRole;
+use crate::services::config::AgentConfig;
 use crate::services::config::Config;
 use crate::theme;
 
@@ -33,6 +41,7 @@ const TIP_LABEL: &str = "Tip:";
 #[allow(dead_code)]
 const TIP_COMMAND: &str = "/create-skill";
 const CHAT_MAX_WIDTH: Pixels = px(750.0);
+const MODEL_MENU_MIN_WIDTH: Pixels = px(200.0);
 // The chat entry is overlaid on the message list, so the list needs room to
 // scroll its last message clear of it.
 const MESSAGES_BOTTOM_PADDING: Pixels = px(150.0);
@@ -75,6 +84,8 @@ pub struct PanelChat {
   input: Entity<TextareaState>,
   agent: anyhow::Result<AgentHarness>,
   agent_config: Arc<anyhow::Result<Config>>,
+  agent_model: Option<SharedString>,
+  model: Option<SharedString>,
   messages: Vec<ChatMessage>,
   scroll_handle: ScrollHandle,
   response: Option<Task<()>>,
@@ -105,7 +116,7 @@ impl PanelChat {
     });
 
     let agent_config = AppServices::obtain().config();
-    let (agent, naming) = connect_agent(None, &agent_config, cx);
+    let (agent, naming) = connect_agent(None, &agent_config, None, cx);
 
     Self {
       title: title.into(),
@@ -113,6 +124,8 @@ impl PanelChat {
       input,
       agent,
       agent_config,
+      agent_model: None,
+      model: None,
       messages: Vec::new(),
       scroll_handle: ScrollHandle::new(),
       response: None,
@@ -145,7 +158,13 @@ impl PanelChat {
     self.messages.clear();
     self.session_id = Some(session_id.clone());
     self.agent_config = AppServices::obtain().config();
-    (self.agent, self._naming) = connect_agent(Some(session_id.clone()), &self.agent_config, cx);
+    (self.agent, self._naming) = connect_agent(
+      Some(session_id.clone()),
+      &self.agent_config,
+      self.model.as_deref(),
+      cx,
+    );
+    self.agent_model = self.model.clone();
 
     let history = agent::load_history(session_id);
     self._history = Some(cx.spawn(async move |this, cx| {
@@ -197,9 +216,11 @@ impl PanelChat {
     // first prompt still in flight can't leave the new agent opening a second
     // session.
     let config = AppServices::obtain().config();
-    if !Arc::ptr_eq(&config, &self.agent_config) {
-      (self.agent, self._naming) = connect_agent(self.session_id.clone(), &config, cx);
+    if !Arc::ptr_eq(&config, &self.agent_config) || self.agent_model != self.model {
+      (self.agent, self._naming) =
+        connect_agent(self.session_id.clone(), &config, self.model.as_deref(), cx);
       self.agent_config = config;
+      self.agent_model = self.model.clone();
     }
 
     self
@@ -274,17 +295,96 @@ impl PanelChat {
       }),
     }
   }
+
+  fn select_model(
+    &mut self,
+    name: SharedString,
+    cx: &mut Context<Self>,
+  ) {
+    self.model = Some(name);
+    cx.notify();
+  }
+
+  fn model_picker(
+    &self,
+    cx: &mut Context<Self>,
+  ) -> impl IntoElement {
+    let config = AppServices::obtain().config();
+    let models = config
+      .as_ref()
+      .as_ref()
+      .map(|config| {
+        config
+          .models
+          .iter()
+          .map(|model| SharedString::from(model.name.clone()))
+          .collect::<Vec<_>>()
+      })
+      .unwrap_or_default();
+    let selected = config
+      .as_ref()
+      .as_ref()
+      .ok()
+      .and_then(|config| resolve_model(config, self.model.as_deref()))
+      .map(|model| SharedString::from(model.name.clone()));
+    let label = selected
+      .clone()
+      .unwrap_or(SharedString::new_static("No Model Configured"));
+    let this = cx.entity().downgrade();
+
+    Button::new("chat-model")
+      .xsmall()
+      .custom(
+        ButtonCustomVariant::new(cx)
+          .foreground(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND).into())
+          .hover(rgba(theme::colors::COLOR_TOOLBAR_HOVER_BACKGROUND_A).into())
+          .active(rgba(theme::colors::COLOR_TOOLBAR_HOVER_BACKGROUND_A).into()),
+      )
+      .rounded(px(6.0))
+      .h(px(28.0))
+      .px(px(6.0))
+      .cursor_pointer()
+      .child(Icon::empty().data(ICON_SPARKLE).h(px(14.0)).w(px(14.0)))
+      .child(label)
+      .dropdown_menu_with_anchor(Anchor::BottomLeft, move |menu, _, _| {
+        models
+          .iter()
+          .fold(menu.min_w(MODEL_MENU_MIN_WIDTH), |menu, name| {
+            let this = this.clone();
+            let item_name = name.clone();
+            menu.item(
+              PopupMenuItem::new(name.clone())
+                .checked(selected.as_ref() == Some(name))
+                .on_click(move |_, _, cx| {
+                  let _ = this.update(cx, |this, cx| this.select_model(item_name.clone(), cx));
+                }),
+            )
+          })
+          .separator()
+          .menu("Settings", Box::new(OpenSettings))
+      })
+  }
+}
+
+fn resolve_model<'a>(
+  config: &'a Config,
+  name: Option<&str>,
+) -> Option<&'a AgentConfig> {
+  name
+    .and_then(|name| config.models.iter().find(|model| model.name == name))
+    .or_else(|| config.models.first())
 }
 
 fn connect_agent(
   session_id: Option<String>,
   config: &anyhow::Result<Config>,
+  model: Option<&str>,
   cx: &mut Context<PanelChat>,
 ) -> (anyhow::Result<AgentHarness>, Option<Task<()>>) {
   let mut agent = config
     .as_ref()
     .map_err(|error| anyhow::anyhow!("Settings failed to load: {error:#}"))
-    .and_then(|config| config.models.first().context("No models configured"))
+    .and_then(|config| resolve_model(config, model).context("No models configured"))
     .map(|model| {
       AgentHarness::new(AgentHarnessOptions {
         session_id,
@@ -318,6 +418,7 @@ impl Render for PanelChat {
   ) -> impl IntoElement {
     let has_messages = !self.messages.is_empty();
     let on_send = cx.listener(|this, _: &ClickEvent, window, cx| this.submit(window, cx));
+    let model_picker = self.model_picker(cx);
 
     div()
       .size_full()
@@ -355,7 +456,7 @@ impl Render for PanelChat {
               this.items_center()
             }
           })
-          .child(chat_entry(&self.input, on_send)),
+          .child(chat_entry(&self.input, model_picker, on_send)),
       )
   }
 }
@@ -382,6 +483,7 @@ fn chat_message((ix, message): (usize, &ChatMessage)) -> AnyElement {
 
 fn chat_entry(
   input: &Entity<TextareaState>,
+  model_picker: impl IntoElement,
   on_send: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
 ) -> Div {
   v_flex()
@@ -402,7 +504,7 @@ fn chat_entry(
           .text_color(rgb(theme::colors::COLOR_FOREGROUND)),
       ),
     )
-    .child(toolbar(on_send))
+    .child(toolbar(model_picker, on_send))
 }
 
 #[allow(dead_code)]
@@ -439,7 +541,10 @@ fn tip(
     ]))
 }
 
-fn toolbar(on_send: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static) -> Div {
+fn toolbar(
+  model_picker: impl IntoElement,
+  on_send: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
+) -> Div {
   h_flex()
     .justify_between()
     .items_center()
@@ -449,29 +554,28 @@ fn toolbar(on_send: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static) -> Di
       h_flex()
         .items_center()
         .gap(px(2.0))
-        .child(toolbar_button(ICON_ADD, None))
-        .child(toolbar_button(ICON_CODE, Some("Agent")))
-        .child(toolbar_button(ICON_SPARKLE, Some("DeepSeek Flash")))
-        .child(
-          div()
-            .w(px(1.0))
-            .h(px(14.0))
-            .bg(rgb(theme::colors::COLOR_INPUT_BORDER)),
-        )
-        // .child(
-        //   div()
-        //     .px(px(6.0))
-        //     .text_sm()
-        //     .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND))
-        //     .child("786K"),
-        // )
-        .child(toolbar_button(ICON_SETTINGS, None)),
+        // .child(toolbar_button(ICON_ADD, None))
+        // .child(toolbar_button(ICON_CODE, Some("Agent")))
+        .child(model_picker), // .child(
+                              //   div()
+                              //     .w(px(1.0))
+                              //     .h(px(14.0))
+                              //     .bg(rgb(theme::colors::COLOR_INPUT_BORDER)),
+                              // )
+                              // .child(
+                              //   div()
+                              //     .px(px(6.0))
+                              //     .text_sm()
+                              //     .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND))
+                              //     .child("786K"),
+                              // )
+                              // .child(toolbar_button(ICON_SETTINGS, None)),
     )
     .child(
       h_flex()
         .items_center()
         .gap(px(2.0))
-        .child(toolbar_button(ICON_MIC, None))
+        // .child(toolbar_button(ICON_MIC, None))
         .child(
           toolbar_button(ICON_ARROW_UP, None)
             .id("chat-send")
