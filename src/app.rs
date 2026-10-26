@@ -491,7 +491,7 @@ fn tab_bar(
         let visible = active != Some(items[ix - 1].id) && active != Some(tab.id);
         tab_separator(visible).into_any_element()
       });
-      let item = tab_bar_item(tabs, tab, active == Some(tab.id), cx).into_any_element();
+      let item = tab_bar_item(tabs, tab, active == Some(tab.id), ix == 0, cx).into_any_element();
       separator.into_iter().chain([item])
     }))
     .child(
@@ -522,6 +522,7 @@ fn tab_bar_item(
   tabs: &Entity<Tabs>,
   tab: &Tab,
   active: bool,
+  first: bool,
   cx: &App,
 ) -> Stateful<Div> {
   let id = tab.id;
@@ -541,8 +542,7 @@ fn tab_bar_item(
     .text_color(rgb(theme::colors::COLOR_TAB_INACTIVE_FOREGROUND))
     // Every tab carries the border so selecting one doesn't shift its layout;
     // only the active tab makes it visible.
-    .border_t_1()
-    .border_l_1()
+    .when(!first, |this| this.border_l_1())
     .border_r_1()
     .border_color(transparent_black())
     .map(|this| {
