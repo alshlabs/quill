@@ -19,13 +19,13 @@ use crate::icons::ICON_MIC;
 use crate::icons::ICON_SETTINGS;
 use crate::icons::ICON_SPARKLE;
 use crate::services::AppServices;
-use crate::services::config::Config;
 use crate::services::agent;
 use crate::services::agent::AgentEvent;
 use crate::services::agent::AgentHarness;
 use crate::services::agent::AgentHarnessOptions;
 use crate::services::agent::HistoryMessage;
 use crate::services::agent::HistoryRole;
+use crate::services::config::Config;
 use crate::theme;
 
 #[allow(dead_code)]
