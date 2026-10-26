@@ -74,7 +74,7 @@ pub struct PanelChat {
   session_id: Option<String>,
   input: Entity<TextareaState>,
   agent: anyhow::Result<AgentHarness>,
-  agent_config: Arc<Config>,
+  agent_config: Arc<anyhow::Result<Config>>,
   messages: Vec<ChatMessage>,
   scroll_handle: ScrollHandle,
   response: Option<Task<()>>,
@@ -278,13 +278,13 @@ impl PanelChat {
 
 fn connect_agent(
   session_id: Option<String>,
-  config: &Config,
+  config: &anyhow::Result<Config>,
   cx: &mut Context<PanelChat>,
 ) -> (anyhow::Result<AgentHarness>, Option<Task<()>>) {
   let mut agent = config
-    .models
-    .first()
-    .context("No models configured")
+    .as_ref()
+    .map_err(|error| anyhow::anyhow!("Settings failed to load: {error:#}"))
+    .and_then(|config| config.models.first().context("No models configured"))
     .map(|model| {
       AgentHarness::new(AgentHarnessOptions {
         session_id,

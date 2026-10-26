@@ -18,20 +18,21 @@ use crate::services::AppServices;
 use crate::services::config::Config;
 
 fn main() -> anyhow::Result<()> {
-  let config = Config::from_yaml_file(&match std::env::var("QUILL_CONFIG") {
+  let config_path = match std::env::var("QUILL_CONFIG") {
     Ok(v) => PathBuf::from(v),
     Err(_) => Config::resolve_config(
       std::env::current_exe()?
         .parent()
         .context("Failed to get path to exe")?,
     )?,
-  })?;
+  };
+  let config = Config::from_yaml_file(&config_path);
 
   dbg!(&config);
 
-  services::agent::init(&config)?;
+  services::agent::init(config.as_ref().ok())?;
 
-  AppServices::new(config).register_global()?;
+  AppServices::new(config_path, config).register_global()?;
 
   window::bootstrap(
     //

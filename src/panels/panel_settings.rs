@@ -21,7 +21,7 @@ pub struct PanelSettings {
   editor: Entity<EditorState>,
   saved_contents: SharedString,
   dirty: bool,
-  save_error: Option<SharedString>,
+  config_error: Option<SharedString>,
   _subscriptions: Vec<Subscription>,
 }
 
@@ -32,15 +32,15 @@ impl PanelSettings {
     window: &mut Window,
     cx: &mut Context<Self>,
   ) -> Self {
-    let config = AppServices::obtain().config();
-    let config_path = &config.config_path;
+    let services = AppServices::obtain();
+    let config_path = services.config_path();
     // Read from disk rather than the loaded `Config`, which has its env
     // references already interpolated.
     let contents = fs::read_to_string(config_path)
       .unwrap_or_else(|error| format!("# Failed to read {}: {error}\n", config_path.display()));
 
     // `QUILL_CONFIG` may hold a relative path.
-    let absolute_path = path::absolute(config_path).unwrap_or_else(|_| config_path.clone());
+    let absolute_path = path::absolute(config_path).unwrap_or_else(|_| config_path.to_path_buf());
 
     let editor = cx.new(|cx| {
       EditorState::new(window, cx)
@@ -58,7 +58,7 @@ impl PanelSettings {
       saved_contents: editor.read(cx).value(),
       editor,
       dirty: false,
-      save_error: None,
+      config_error: config_error(&services.config()),
       _subscriptions: vec![on_change],
     }
   }
@@ -85,21 +85,20 @@ impl PanelSettings {
     cx: &mut Context<Self>,
   ) {
     let contents = self.editor.read(cx).value();
-    // The app refuses to start on a config it cannot load, so never write one.
-    let saved = Config::from_yaml(&contents, &self.config_path).and_then(|config| {
-      fs::write(&self.config_path, contents.as_bytes())?;
-      Ok(config)
-    });
-    match saved {
-      Ok(config) => {
-        agent::apply_config(&config);
-        AppServices::obtain().set_config(config);
-        self.saved_contents = contents;
-        self.save_error = None;
-        self.update_dirty(cx);
-      }
-      Err(error) => self.save_error = Some(format!("{error:#}").into()),
+    if let Err(error) = fs::write(&self.config_path, contents.as_bytes()) {
+      self.config_error = Some(format!("Failed to save: {error}").into());
+      cx.notify();
+      return;
     }
+    self.saved_contents = contents.clone();
+    self.update_dirty(cx);
+
+    let config = Config::from_yaml(&contents, &self.config_path);
+    if let Ok(config) = &config {
+      agent::apply_config(config);
+    }
+    self.config_error = config_error(&config);
+    AppServices::obtain().set_config(config);
     cx.notify();
   }
 }
@@ -124,7 +123,7 @@ impl Render for PanelSettings {
           .text_color(rgb(theme::colors::COLOR_INPUT_PLACEHOLDER_FOREGROUND))
           .child(self.config_path.display().to_string()),
       )
-      .children(self.save_error.clone().map(|error| {
+      .children(self.config_error.clone().map(|error| {
         div()
           .text_sm()
           .py(px(2.0))
@@ -144,4 +143,11 @@ impl Render for PanelSettings {
         ),
       )
   }
+}
+
+fn config_error(config: &anyhow::Result<Config>) -> Option<SharedString> {
+  config
+    .as_ref()
+    .err()
+    .map(|error| format!("{error:#}").into())
 }

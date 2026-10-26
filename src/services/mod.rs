@@ -1,6 +1,8 @@
 pub mod agent;
 pub mod config;
 
+use std::path::Path;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::OnceLock;
 use std::sync::PoisonError;
@@ -13,17 +15,28 @@ static APP_SERVICES: OnceLock<AppServices> = OnceLock::new();
 
 pub struct AppServices {
   // pub agent_harness: Arc<AgentHarness>,
-  config: RwLock<Arc<Config>>,
+  config_path: PathBuf,
+  // A config that fails to load is kept as its error so the app still starts
+  // and chats can report it.
+  config: RwLock<Arc<anyhow::Result<Config>>>,
 }
 
 impl AppServices {
-  pub fn new(config: Config) -> Self {
+  pub fn new(
+    config_path: PathBuf,
+    config: anyhow::Result<Config>,
+  ) -> Self {
     Self {
+      config_path,
       config: RwLock::new(Arc::new(config)),
     }
   }
 
-  pub fn config(&self) -> Arc<Config> {
+  pub fn config_path(&self) -> &Path {
+    &self.config_path
+  }
+
+  pub fn config(&self) -> Arc<anyhow::Result<Config>> {
     self
       .config
       .read()
@@ -33,7 +46,7 @@ impl AppServices {
 
   pub fn set_config(
     &self,
-    config: Config,
+    config: anyhow::Result<Config>,
   ) {
     *self.config.write().unwrap_or_else(PoisonError::into_inner) = Arc::new(config);
   }

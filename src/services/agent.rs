@@ -53,7 +53,7 @@ static RUNTIME: OnceLock<Runtime> = OnceLock::new();
 
 /// Configures goose and starts the runtime every agent and storage call runs on.
 /// Must run before any other goose code: goose reads its environment once.
-pub fn init(config: &Config) -> Result<()> {
+pub fn init(config: Option<&Config>) -> Result<()> {
   // goose resolves the OpenAI-compatible endpoint and key from the process
   // environment; edition 2024 marks env mutation unsafe.
   unsafe {
@@ -67,7 +67,9 @@ pub fn init(config: &Config) -> Result<()> {
     }
   }
 
-  apply_config(config);
+  if let Some(config) = config {
+    apply_config(config);
+  }
   register_builtin_extensions(goose_mcp::BUILTIN_EXTENSIONS.clone());
 
   let runtime = tokio::runtime::Builder::new_multi_thread()
