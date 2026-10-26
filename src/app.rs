@@ -284,7 +284,8 @@ impl Render for AppRoot {
       window.use_keyed_state("sidebar-last-width", cx, |_, _| SIDEBAR_DEFAULT_WIDTH);
     let dragging = window.use_keyed_state("storybook-sidebar-dragging", cx, |_, _| false);
     let hovered = window.use_keyed_state("storybook-dragbar-hovered", cx, |_, _| false);
-    let sidebar_view = window.use_keyed_state("sidebar-view", cx, |_, _| None::<SidebarView>);
+    let sidebar_view =
+      window.use_keyed_state("sidebar-view", cx, |_, _| Some(SidebarView::Chats));
     let view = *sidebar_view.read(cx);
 
     v_flex()
@@ -392,10 +393,9 @@ fn sidebar_nav(
             });
             let last_width = *sidebar_last_width.read(cx);
             sidebar_width.update(cx, |width, cx| {
-              *width = if active {
-                None
-              } else {
-                width.or(Some(last_width))
+              *width = match width {
+                Some(_) if active => None,
+                _ => width.or(Some(last_width)),
               };
               cx.notify();
             });
