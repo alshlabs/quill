@@ -17,7 +17,6 @@ use crate::panels::panel_chat::PanelChat;
 use crate::panels::panel_settings::DirtyChanged;
 use crate::panels::panel_settings::PanelSettings;
 use crate::services::updates;
-use crate::services::updates::UpgradeOutcome;
 use crate::sidebars::sidebar_chats::OpenChat;
 use crate::sidebars::sidebar_chats::SidebarChats;
 use crate::sidebars::sidebar_plugins::SidebarPlugins;
@@ -53,7 +52,6 @@ pub enum UpdateState {
   #[default]
   UpToDate,
   Available,
-  Installing,
 }
 
 impl Global for UpdateState {}
@@ -132,35 +130,26 @@ impl AppRoot {
   fn install_update(
     &mut self,
     _: &Update,
-    _window: &mut Window,
+    window: &mut Window,
     cx: &mut Context<Self>,
   ) {
     if UpdateState::get(cx) != UpdateState::Available {
       return;
     }
-    cx.set_global(UpdateState::Installing);
-    cx.notify();
+
+    // The process has to outlive its window while the update installs.
+    cx.set_quit_mode(QuitMode::Explicit);
+    window.remove_window();
 
     let upgrade = updates::try_upgrade();
-    self._update = Some(cx.spawn(async move |this, cx| {
-      let outcome = upgrade.await;
-      let _ = this.update(cx, |_, cx| {
-        let state = match outcome {
-          Ok(UpgradeOutcome::Success) => {
-            if updates::relaunch().is_ok() {
-              cx.quit();
-              return;
-            }
-            // Installed but not started; the new release runs on the next launch.
-            UpdateState::UpToDate
-          }
-          Ok(UpgradeOutcome::Skip) => UpdateState::UpToDate,
-          Err(_) => UpdateState::Available,
-        };
-        cx.set_global(state);
-        cx.notify();
-      });
-    }));
+    cx.spawn(async move |_, cx| {
+      let _ = upgrade.await;
+      // Relaunching even when the install failed brings the current release back
+      // instead of leaving the app closed.
+      let _ = updates::relaunch();
+      cx.update(|cx| cx.quit());
+    })
+    .detach();
   }
 
   fn add_chat(

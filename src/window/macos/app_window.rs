@@ -82,7 +82,6 @@ fn update_button(state: UpdateState) -> Option<Stateful<Div>> {
   let label = match state {
     UpdateState::UpToDate => return None,
     UpdateState::Available => "Update Available",
-    UpdateState::Installing => "Updating…",
   };
 
   let button = div()
