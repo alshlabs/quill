@@ -49,11 +49,11 @@ It renders frames at your screen's refresh rate (e.g. 144fps) so the experience 
 
 ## Motivation for this project
 
-All the current desktop harnesses are built on top of Electron (basically a full-fat dedicated clone of Chrome running only one website, their UI).
+All the current desktop harnesses are built on top of Electron (basically a full-fat dedicated clone of Chrome running only one website).
 
 Conventionally, this is done to minimize the friction associated with cross-platform application development and be competitive in feature delivery. Essentially, sacrifice a little user experience in exchange for the ability to move faster than competitors.
 
-In my view, harnesses have reached a level of maturity now where the features we expect from them are well enough defined. In addition,there is no longer the pressure to be a first mover in the Desktop Agent Harness space. 
+In my view, harnesses have reached a level of maturity now where the features we expect from them are well enough defined. In addition, there is no longer the pressure to be a first mover in the Desktop Agent Harness space. 
 
 I think we can now afford a high quality tool that respects your computers resources while also supporting all model providers.
 
