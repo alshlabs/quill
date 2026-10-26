@@ -1,5 +1,7 @@
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-mod mod_linux; pub use self::mod_linux::*;
+mod mod_linux; 
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+pub use self::mod_linux::*;
 
 pub const ICON_ASTERISK         : &[u8] = include_bytes!("./fontawesome-icons-7.3.1/solid/asterisk.svg");
 pub const ICON_SEARCH           : &[u8] = include_bytes!("./vscode/search-large.svg");
