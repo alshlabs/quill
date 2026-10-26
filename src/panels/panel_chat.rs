@@ -496,6 +496,7 @@ fn chat_entry(
 ) -> Div {
   v_flex()
     // .bg(rgb(theme::colors::COLOR_INPUT_BACKGROUND))
+    .bg(rgb(theme::colors::COLOR_EDITOR_BACKGROUND))
     .border_1()
     .border_color(rgb(theme::colors::COLOR_INPUT_BORDER))
     .w_full()
