@@ -1,6 +1,6 @@
 [package]
 name = "quill"
-version = "0.0.0-local"
+version = "0.0.1"
 edition = "2024"
 license-file = "LICENSE.md"
 
@@ -22,6 +22,8 @@ self_update = { version = "1.3.2", default-features = false, features = [
   "async",
   "archive-tar",
   "compression-tar-gz",
+  "archive-zip",
+  "compression-zip-deflate",
   "checksums",
 ] }
 semver = "1.0.28"

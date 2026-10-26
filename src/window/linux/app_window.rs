@@ -12,6 +12,7 @@ use gpui_kit::*;
 use super::window_controls::WindowControl;
 use super::window_decoration::{self};
 use crate::app::Update;
+use crate::app::UpdateState;
 use crate::icons::ICON_FEATHER;
 use crate::theme::colors::COLOR_BRAND_FOREGROUND;
 use crate::theme::colors::COLOR_BUTTON_BACKGROUND;
@@ -150,7 +151,7 @@ impl<V> AppRoot<V> {
               ),
           ),
       )
-      .child(update_button())
+      .children(update_button(UpdateState::get(cx)))
       .when(is_client_decorated, |this| {
         this
           .child(WindowControl::Minimize)
@@ -160,8 +161,14 @@ impl<V> AppRoot<V> {
   }
 }
 
-fn update_button() -> Stateful<Div> {
-  div()
+fn update_button(state: UpdateState) -> Option<Stateful<Div>> {
+  let label = match state {
+    UpdateState::UpToDate => return None,
+    UpdateState::Available => "Update Available",
+    UpdateState::Installing => "Updating…",
+  };
+
+  let button = div()
     .id("title-bar-update")
     .flex()
     .flex_shrink_0()
@@ -183,5 +190,7 @@ fn update_button() -> Stateful<Div> {
       cx.stop_propagation();
       window.dispatch_action(Update.boxed_clone(), cx);
     })
-    .child("Update Available")
+    .child(label);
+
+  Some(button)
 }

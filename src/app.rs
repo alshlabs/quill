@@ -16,6 +16,8 @@ use crate::panels::panel_chat::ChatEvent;
 use crate::panels::panel_chat::PanelChat;
 use crate::panels::panel_settings::DirtyChanged;
 use crate::panels::panel_settings::PanelSettings;
+use crate::services::updates;
+use crate::services::updates::UpgradeOutcome;
 use crate::sidebars::sidebar_chats::OpenChat;
 use crate::sidebars::sidebar_chats::SidebarChats;
 use crate::sidebars::sidebar_plugins::SidebarPlugins;
@@ -46,6 +48,22 @@ actions!(
   ]
 );
 
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+pub enum UpdateState {
+  #[default]
+  UpToDate,
+  Available,
+  Installing,
+}
+
+impl Global for UpdateState {}
+
+impl UpdateState {
+  pub fn get(cx: &App) -> Self {
+    cx.try_global::<Self>().copied().unwrap_or_default()
+  }
+}
+
 pub fn init(cx: &mut App) {
   cx.bind_keys([
     KeyBinding::new("cmd-n", NewChat, None),
@@ -61,6 +79,7 @@ pub struct AppRoot {
   tabs: Entity<Tabs>,
   sidebar_chats: Entity<SidebarChats>,
   _subscriptions: Vec<Subscription>,
+  _update: Option<Task<()>>,
 }
 
 impl AppRoot {
@@ -83,12 +102,65 @@ impl AppRoot {
       ),
     ];
 
-    Self {
+    let mut this = Self {
       focus_handle,
       tabs,
       sidebar_chats,
       _subscriptions: subscriptions,
+      _update: None,
+    };
+    this.check_for_update(cx);
+    this
+  }
+
+  fn check_for_update(
+    &mut self,
+    cx: &mut Context<Self>,
+  ) {
+    let check = updates::check_for_update();
+    self._update = Some(cx.spawn(async move |this, cx| {
+      let Ok(Some(_)) = check.await else {
+        return;
+      };
+      let _ = this.update(cx, |_, cx| {
+        cx.set_global(UpdateState::Available);
+        cx.notify();
+      });
+    }));
+  }
+
+  fn install_update(
+    &mut self,
+    _: &Update,
+    _window: &mut Window,
+    cx: &mut Context<Self>,
+  ) {
+    if UpdateState::get(cx) != UpdateState::Available {
+      return;
     }
+    cx.set_global(UpdateState::Installing);
+    cx.notify();
+
+    let upgrade = updates::try_upgrade();
+    self._update = Some(cx.spawn(async move |this, cx| {
+      let outcome = upgrade.await;
+      let _ = this.update(cx, |_, cx| {
+        let state = match outcome {
+          Ok(UpgradeOutcome::Success) => {
+            if updates::relaunch().is_ok() {
+              cx.quit();
+              return;
+            }
+            // Installed but not started; the new release runs on the next launch.
+            UpdateState::UpToDate
+          }
+          Ok(UpgradeOutcome::Skip) => UpdateState::UpToDate,
+          Err(_) => UpdateState::Available,
+        };
+        cx.set_global(state);
+        cx.notify();
+      });
+    }));
   }
 
   fn add_chat(
@@ -230,6 +302,7 @@ impl Render for AppRoot {
       .on_action(cx.listener(Self::close_tab))
       .on_action(cx.listener(Self::next_tab))
       .on_action(cx.listener(Self::prev_tab))
+      .on_action(cx.listener(Self::install_update))
       .h_full()
       .w_full()
       // Title bar

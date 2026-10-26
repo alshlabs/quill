@@ -1,39 +1,18 @@
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::AtomicU64;
-use std::sync::atomic::Ordering;
+use std::future::Future;
+use std::path::Path;
+use std::path::PathBuf;
+use std::process::Command;
 
+use anyhow::Context;
 use self_update::ReleaseAsset;
 use self_update::backends::github;
 
-const BIN_NAME: &str = "http-server-rs";
+const BIN_NAME: &str = "quill";
+const APP_BUNDLE: &str = "Quill.app";
+const APP_IMAGE: &str = "Quill.AppImage";
 
-pub const TARGET_REPO: &str = "alshdavid/http-server-rs";
-
-pub async fn check_for_update(
-  options: &UpgradeOptions<'_>
-) -> anyhow::Result<Option<semver::Version>> {
-  if is_prerelease(options.current_version)? {
-    return Ok(None);
-  }
-
-  let releases = configure(options)?
-    .build_async()?
-    .get_latest_release_async()
-    .await?;
-
-  let Some(release) = releases.latest() else {
-    return Ok(None);
-  };
-
-  let current_version = semver::Version::parse(options.current_version)?;
-  let remote_version = normalize_tag(release.version())?;
-
-  if current_version < remote_version {
-    return Ok(Some(remote_version));
-  }
-
-  Ok(None)
-}
+pub const TARGET_REPO: &str = "alshlabs/quill";
+pub const CURRENT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Debug)]
 pub enum UpgradeOutcome {
@@ -41,31 +20,66 @@ pub enum UpgradeOutcome {
   Success,
 }
 
-#[derive(Debug)]
-pub struct UpgradeOptions<'a> {
-  pub target_repo: &'a str,
-  pub current_version: &'a str,
+pub fn check_for_update() -> impl Future<Output = anyhow::Result<Option<semver::Version>>> {
+  spawn(async {
+    if !is_installed_release()? {
+      return Ok(None);
+    }
+
+    let releases = configure()?
+      .build_async()?
+      .get_latest_release_async()
+      .await?;
+
+    let Some(release) = releases.latest() else {
+      return Ok(None);
+    };
+
+    let current_version = semver::Version::parse(CURRENT_VERSION)?;
+    let remote_version = normalize_tag(release.version())?;
+
+    if current_version < remote_version {
+      return Ok(Some(remote_version));
+    }
+
+    Ok(None)
+  })
 }
 
-pub async fn try_upgrade(options: &UpgradeOptions<'_>) -> anyhow::Result<UpgradeOutcome> {
-  if is_prerelease(options.current_version)? {
-    return Ok(UpgradeOutcome::Skip);
-  }
+pub fn try_upgrade() -> impl Future<Output = anyhow::Result<UpgradeOutcome>> {
+  spawn(async {
+    if !is_installed_release()? {
+      return Ok(UpgradeOutcome::Skip);
+    }
 
-  let status = configure(options)?
-    .progress_callback(progress())
-    .build_async()?
-    .update_async()
-    .await?;
+    let status = configure()?.build_async()?.update_async().await?;
 
-  match status {
-    self_update::VersionStatus::Updated(_) => Ok(UpgradeOutcome::Success),
-    _ => Ok(UpgradeOutcome::Skip),
-  }
+    match status {
+      self_update::VersionStatus::Updated(_) => Ok(UpgradeOutcome::Success),
+      _ => Ok(UpgradeOutcome::Skip),
+    }
+  })
 }
 
-fn configure(options: &UpgradeOptions<'_>) -> anyhow::Result<github::UpdateBuilder> {
-  let Some((owner, name)) = options.target_repo.split_once('/') else {
+/// Starts the freshly installed release. The caller is expected to quit right
+/// after, so the old process does not linger beside the new one.
+pub fn relaunch() -> anyhow::Result<()> {
+  let mut command = match std::env::consts::OS {
+    "macos" => {
+      let mut command = Command::new("open");
+      // `-n` because this instance is still running when the new one starts.
+      command.arg("-n").arg(app_bundle_path()?);
+      command
+    }
+    "linux" => Command::new(app_image_path()?),
+    _ => Command::new(std::env::current_exe()?),
+  };
+  command.spawn()?;
+  Ok(())
+}
+
+fn configure() -> anyhow::Result<github::UpdateBuilder> {
+  let Some((owner, name)) = TARGET_REPO.split_once('/') else {
     anyhow::bail!("Invalid repo name");
   };
 
@@ -74,15 +88,58 @@ fn configure(options: &UpgradeOptions<'_>) -> anyhow::Result<github::UpdateBuild
     .repo_owner(owner)
     .repo_name(name)
     .bin_name(BIN_NAME)
-    .current_version(options.current_version)
+    .current_version(CURRENT_VERSION)
     .asset_matcher(select_asset)
     .unattended();
+
+  match std::env::consts::OS {
+    "macos" => {
+      // The whole bundle is swapped, so the code signature stays consistent with
+      // the executable; replacing only the inner binary would break it.
+      builder
+        .bundle_path_in_archive(APP_BUNDLE)
+        .bundle_install_path(app_bundle_path()?);
+    }
+    "linux" => {
+      // The running executable lives inside the AppImage's read-only mount; the
+      // file to replace is the AppImage itself.
+      builder
+        .bin_path_in_archive(APP_IMAGE)
+        .bin_install_path(app_image_path()?);
+    }
+    _ => {}
+  }
 
   Ok(builder)
 }
 
-fn is_prerelease(version: &str) -> anyhow::Result<bool> {
-  Ok(!semver::Version::parse(version)?.pre.is_empty())
+/// Local builds carry a prerelease version and are not packaged, so they never
+/// update themselves.
+fn is_installed_release() -> anyhow::Result<bool> {
+  if !semver::Version::parse(CURRENT_VERSION)?.pre.is_empty() {
+    return Ok(false);
+  }
+
+  Ok(match std::env::consts::OS {
+    "macos" => app_bundle_path().is_ok(),
+    "linux" => app_image_path().is_ok(),
+    _ => true,
+  })
+}
+
+fn app_bundle_path() -> anyhow::Result<PathBuf> {
+  let exe = std::env::current_exe()?;
+  exe
+    .ancestors()
+    .find(|path| path.extension().is_some_and(|ext| ext == "app"))
+    .map(Path::to_path_buf)
+    .context("Not running from an app bundle")
+}
+
+fn app_image_path() -> anyhow::Result<PathBuf> {
+  std::env::var_os("APPIMAGE")
+    .map(PathBuf::from)
+    .context("Not running from an AppImage")
 }
 
 fn normalize_tag(tag: &str) -> anyhow::Result<semver::Version> {
@@ -91,47 +148,40 @@ fn normalize_tag(tag: &str) -> anyhow::Result<semver::Version> {
 }
 
 fn select_asset(assets: &[ReleaseAsset]) -> Option<ReleaseAsset> {
-  let os = match std::env::consts::OS {
-    "windows" => &["win32", "windows", "win"][..],
-    "macos" => &["macos", "darwin"][..],
-    "linux" => &["linux"][..],
+  let (os, extension) = match std::env::consts::OS {
+    "windows" => ("windows", ".zip"),
+    "macos" => ("macos", ".tar.gz"),
+    "linux" => ("linux", ".tar.gz"),
     _ => return None,
   };
 
   let arch = match std::env::consts::ARCH {
-    "x86_64" => &["amd64", "x86_64"][..],
-    "aarch64" => &["arm64", "aarch64"][..],
+    "x86_64" => "amd64",
+    "aarch64" => "arm64",
     _ => return None,
   };
 
+  let name = format!("{BIN_NAME}-{os}-{arch}{extension}");
+
   assets
     .iter()
-    .find(|asset| {
-      let name = asset.name().to_ascii_lowercase();
-      name.ends_with(".tar.gz")
-        && os.iter().any(|s| name.contains(s))
-        && arch.iter().any(|s| name.contains(s))
-    })
+    .find(|asset| asset.name().eq_ignore_ascii_case(&name))
     .cloned()
 }
 
-fn progress() -> impl Fn(u64, Option<u64>) + Send + Sync + 'static {
-  let started = AtomicBool::new(false);
-  let reported = AtomicU64::new(0);
-
-  move |downloaded, total| {
-    if !started.swap(true, Ordering::Relaxed) {
-      println!("0%");
-    }
-
-    let Some(total) = total.filter(|total| *total > 0) else {
-      return;
-    };
-
-    let step = (downloaded * 4 / total).min(4);
-    if step > reported.load(Ordering::Relaxed) {
-      reported.store(step, Ordering::Relaxed);
-      println!("{}%", step * 25);
-    }
-  }
+/// The GitHub client needs a tokio reactor, which the UI executor does not
+/// provide. Update checks are rare, so each runs on its own short-lived runtime.
+fn spawn<T: Send + 'static>(
+  future: impl Future<Output = anyhow::Result<T>> + Send + 'static
+) -> impl Future<Output = anyhow::Result<T>> {
+  let (tx, rx) = futures::channel::oneshot::channel();
+  std::thread::spawn(move || {
+    let result = tokio::runtime::Builder::new_current_thread()
+      .enable_all()
+      .build()
+      .map_err(anyhow::Error::from)
+      .and_then(|runtime| runtime.block_on(future));
+    let _ = tx.send(result);
+  });
+  async move { rx.await? }
 }

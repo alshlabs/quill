@@ -41,6 +41,7 @@ use super::window_controls::WINDOW_CONTROLS;
 use super::window_controls::WINDOW_CONTROLS_WIDTH;
 use super::window_decoration::{self};
 use crate::app::Update;
+use crate::app::UpdateState;
 use crate::icons::ICON_FEATHER;
 use crate::theme::colors::COLOR_BRAND_FOREGROUND;
 use crate::theme::colors::COLOR_BUTTON_BACKGROUND;
@@ -90,8 +91,9 @@ impl<V: Render + 'static> Render for AppRoot<V> {
   fn render(
     &mut self,
     window: &mut Window,
-    _cx: &mut Context<Self>,
+    cx: &mut Context<Self>,
   ) -> impl IntoElement {
+    let update_state = UpdateState::get(cx);
     let body = div()
       .flex()
       .flex_col()
@@ -105,14 +107,14 @@ impl<V: Render + 'static> Render for AppRoot<V> {
       }))
       .text_color(rgb(COLOR_FOREGROUND))
       .relative()
-      .child(self.title_bar(window))
+      .child(self.title_bar(window, update_state))
       // The content is not inset: the delegate's root owns this coordinate
       // space from y=0, so it can place elements in the strip. It insets its own
       // content instead, leaving the strip's height to it.
       .child(self.root.clone())
       // The controls come last, after the content has painted its own top area
       // over the strip: they are the shell's, and stay above the application.
-      .child(self.window_controls(window));
+      .child(self.window_controls(window, update_state));
     // .child(strip_boundary());
 
     window_decoration::window_frame().child(body)
@@ -129,6 +131,7 @@ impl<V> AppRoot<V> {
   fn window_controls(
     &self,
     window: &Window,
+    update_state: UpdateState,
   ) -> impl IntoElement {
     let show_controls = !window.is_fullscreen();
 
@@ -140,7 +143,7 @@ impl<V> AppRoot<V> {
       .flex_row()
       .items_center()
       .h(px(TITLE_BAR_HEIGHT))
-      .child(update_button())
+      .children(update_button(update_state))
       .when(show_controls, |this| this.children(WINDOW_CONTROLS))
   }
 
@@ -154,6 +157,7 @@ impl<V> AppRoot<V> {
   fn title_bar(
     &self,
     window: &Window,
+    update_state: UpdateState,
   ) -> impl IntoElement {
     div()
       .id("title-bar")
@@ -188,20 +192,28 @@ impl<V> AppRoot<V> {
               ),
           ),
       )
-      .child(
-        div()
-          .flex_shrink_0()
-          .w(px(UPDATE_BUTTON_RESERVED_WIDTH))
-          .h_full(),
-      )
+      .when(update_state != UpdateState::UpToDate, |this| {
+        this.child(
+          div()
+            .flex_shrink_0()
+            .w(px(UPDATE_BUTTON_RESERVED_WIDTH))
+            .h_full(),
+        )
+      })
       .when(!window.is_fullscreen(), |this| {
         this.child(div().flex_shrink_0().w(px(WINDOW_CONTROLS_WIDTH)).h_full())
       })
   }
 }
 
-fn update_button() -> Stateful<Div> {
-  div()
+fn update_button(state: UpdateState) -> Option<Stateful<Div>> {
+  let label = match state {
+    UpdateState::UpToDate => return None,
+    UpdateState::Available => "Update Available",
+    UpdateState::Installing => "Updating…",
+  };
+
+  let button = div()
     .id("title-bar-update")
     .flex()
     .flex_shrink_0()
@@ -220,5 +232,7 @@ fn update_button() -> Stateful<Div> {
       cx.stop_propagation();
       window.dispatch_action(Update.boxed_clone(), cx);
     })
-    .child("Update Available")
+    .child(label);
+
+  Some(button)
 }

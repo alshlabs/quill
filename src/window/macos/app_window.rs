@@ -7,6 +7,7 @@ use gpui_kit::component::TitleBar;
 use gpui_kit::*;
 
 use crate::app::Update;
+use crate::app::UpdateState;
 use crate::theme::colors::COLOR_BUTTON_BACKGROUND;
 use crate::theme::colors::COLOR_BUTTON_FOREGROUND;
 use crate::theme::colors::COLOR_BUTTON_HOVER_BACKGROUND;
@@ -55,7 +56,7 @@ impl<V: Render + 'static> Render for AppRoot<V> {
 impl<V> AppRoot<V> {
   fn title_bar(
     &self,
-    _cx: &mut Context<Self>,
+    cx: &mut Context<Self>,
   ) -> impl IntoElement {
     TitleBar::new()
       .bg(rgba(0x00000000))
@@ -73,12 +74,18 @@ impl<V> AppRoot<V> {
           .flex()
           .items_center(),
       )
-      .child(update_button())
+      .children(update_button(UpdateState::get(cx)))
   }
 }
 
-fn update_button() -> Stateful<Div> {
-  div()
+fn update_button(state: UpdateState) -> Option<Stateful<Div>> {
+  let label = match state {
+    UpdateState::UpToDate => return None,
+    UpdateState::Available => "Update Available",
+    UpdateState::Installing => "Updating…",
+  };
+
+  let button = div()
     .id("title-bar-update")
     .flex()
     .flex_shrink_0()
@@ -100,5 +107,7 @@ fn update_button() -> Stateful<Div> {
       cx.stop_propagation();
       window.dispatch_action(Update.boxed_clone(), cx);
     })
-    .child("Update Available")
+    .child(label);
+
+  Some(button)
 }
