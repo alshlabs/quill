@@ -85,28 +85,48 @@ fn body(id: &ElementId) -> Stateful<Div> {
         .child(suggested_item(
           ICON_COMMENT,
           "Start new chat",
-          [key_icon(ICON_COMMAND), "N".into_any_element()],
+          shortcut(&[], "N"),
         ))
         .child(suggested_item(
           ICON_FOLDER_OPENED,
           "Open Workspace",
-          [key_icon(ICON_COMMAND), "O".into_any_element()],
+          shortcut(&[], "O"),
         ))
         .child(suggested_item(
           ICON_THREE_BARS,
           "Show All Commands",
-          [
-            key_icon(ICON_SHIFT),
-            key_icon(ICON_COMMAND),
-            "P".into_any_element(),
-          ],
+          shortcut(&[Modifier::Shift], "P"),
         ))
         .child(suggested_item(
           ICON_GEAR,
           "Configure Agents",
-          [key_icon(ICON_COMMAND), ",".into_any_element()],
+          shortcut(&[], ","),
         )),
     )
+}
+
+enum Modifier {
+  Shift,
+}
+
+fn shortcut(
+  modifiers: &[Modifier],
+  key: &'static str,
+) -> Vec<AnyElement> {
+  let mut keys = Vec::new();
+  if cfg!(target_os = "macos") {
+    keys.extend(modifiers.iter().map(|modifier| match modifier {
+      Modifier::Shift => key_icon(ICON_SHIFT),
+    }));
+    keys.push(key_icon(ICON_COMMAND));
+  } else {
+    keys.push("Ctrl".into_any_element());
+    keys.extend(modifiers.iter().map(|modifier| match modifier {
+      Modifier::Shift => "Shift".into_any_element(),
+    }));
+  }
+  keys.push(key.into_any_element());
+  keys
 }
 
 fn key_icon(icon: &'static [u8]) -> AnyElement {

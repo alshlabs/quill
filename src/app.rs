@@ -64,7 +64,7 @@ impl UpdateState {
 
 pub fn init(cx: &mut App) {
   cx.bind_keys([
-    KeyBinding::new("cmd-n", NewChat, None),
+    KeyBinding::new("secondary-n", NewChat, None),
     KeyBinding::new("cmd-w", CloseTab, None),
     KeyBinding::new("secondary-s", Save, None),
     KeyBinding::new("ctrl-tab", NextTab, None),
