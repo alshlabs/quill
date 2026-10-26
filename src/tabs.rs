@@ -19,7 +19,7 @@ impl TabId {
 
 pub enum TabKind {
   Chat(Entity<PanelChat>),
-  Settings,
+  Settings(Entity<PanelSettings>),
 }
 
 impl TabKind {
@@ -29,21 +29,21 @@ impl TabKind {
   ) -> SharedString {
     match self {
       TabKind::Chat(chat) => chat.read(cx).title(),
-      TabKind::Settings => "Settings".into(),
+      TabKind::Settings(_) => "Settings".into(),
     }
   }
 
   pub fn icon(&self) -> &'static [u8] {
     match self {
       TabKind::Chat(_) => ICON_COMMENT,
-      TabKind::Settings => ICON_GEAR,
+      TabKind::Settings(_) => ICON_GEAR,
     }
   }
 
-  pub fn view(&self) -> AnyElement {
+  pub fn view(&self) -> AnyView {
     match self {
-      TabKind::Chat(chat) => chat.clone().into_any_element(),
-      TabKind::Settings => PanelSettings::new().into_any_element(),
+      TabKind::Chat(chat) => chat.clone().into(),
+      TabKind::Settings(settings) => settings.clone().into(),
     }
   }
 }

@@ -1,5 +1,6 @@
 use std::future::Future;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use gpui_kit::component::Root;
 use gpui_kit::component::Theme;
@@ -60,6 +61,11 @@ pub fn bootstrap<V, F, Fut>(
         // token is the only hook, and it also dims the library's other muted text.
         Theme::global_mut(cx).muted_foreground =
           rgb(crate::theme::colors::COLOR_INPUT_PLACEHOLDER_FOREGROUND).into();
+        let highlight_theme = Arc::make_mut(&mut Theme::global_mut(cx).highlight_theme);
+        highlight_theme.style.editor_background =
+          Some(rgb(crate::theme::colors::COLOR_EDITOR_BACKGROUND).into());
+        highlight_theme.style.editor_active_line =
+          Some(rgb(crate::theme::colors::COLOR_EDITOR_LINE_HIGHLIGHT_BACKGROUND).into());
 
         window_callback(window, cx);
 

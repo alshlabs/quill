@@ -10,7 +10,7 @@ futures = "0.3"
 goose = { git = "https://github.com/aaif-goose/goose", rev = "591edd47cf2cfea4957d720c607cf2a4def8673d", features = ["rustls-tls"] }
 home = "0.5.12"
 goose-mcp = { git = "https://github.com/aaif-goose/goose", rev = "591edd47cf2cfea4957d720c607cf2a4def8673d", default-features = false, features = ["bundled-mcp"] }
-gpui-kit = "0.6.6"
+gpui-kit = { version = "0.6.6", features = ["tree-sitter-yaml"] }
 rmcp = { version = "3.7.0", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"

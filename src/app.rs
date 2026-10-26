@@ -15,6 +15,7 @@ use crate::icons::ICON_SEARCH;
 use crate::panels::about_blank::PanelAboutBlank;
 use crate::panels::panel_chat::ChatEvent;
 use crate::panels::panel_chat::PanelChat;
+use crate::panels::panel_settings::PanelSettings;
 use crate::sidebars::sidebar_chats::OpenChat;
 use crate::sidebars::sidebar_chats::SidebarChats;
 use crate::sidebars::sidebar_plugins::SidebarPlugins;
@@ -113,7 +114,7 @@ impl AppRoot {
         TabKind::Chat(chat) => {
           (chat.read(cx).session_id() == Some(session_id.as_str())).then_some(tab.id)
         }
-        TabKind::Settings => None,
+        TabKind::Settings(_) => None,
       });
     if let Some(id) = open_tab {
       self.tabs.update(cx, |tabs, cx| tabs.activate(id, cx));
@@ -136,21 +137,24 @@ impl AppRoot {
   fn open_settings(
     &mut self,
     _: &OpenSettings,
-    _window: &mut Window,
+    window: &mut Window,
     cx: &mut Context<Self>,
   ) {
+    let open_tab = self
+      .tabs
+      .read(cx)
+      .items()
+      .iter()
+      .find(|tab| matches!(tab.kind, TabKind::Settings(_)))
+      .map(|tab| tab.id);
+    if let Some(id) = open_tab {
+      self.tabs.update(cx, |tabs, cx| tabs.activate(id, cx));
+      return;
+    }
+
+    let settings = cx.new(|cx| PanelSettings::new(window, cx));
     self.tabs.update(cx, |tabs, cx| {
-      let open_tab = tabs
-        .items()
-        .iter()
-        .find(|tab| matches!(tab.kind, TabKind::Settings))
-        .map(|tab| tab.id);
-      match open_tab {
-        Some(id) => tabs.activate(id, cx),
-        None => {
-          tabs.open(TabKind::Settings, cx);
-        }
-      }
+      tabs.open(TabKind::Settings(settings), cx);
     });
   }
 

@@ -1,115 +1,73 @@
-use gpui_kit::AnyElement;
-use gpui_kit::RenderOnce;
-use gpui_kit::base::h_flex;
+use std::fs;
+use std::path;
+
 use gpui_kit::base::v_flex;
-use gpui_kit::component::Icon;
+use gpui_kit::component::input::Editor;
+use gpui_kit::component::input::EditorState;
 use gpui_kit::*;
 
-use crate::app::NewChat;
-use crate::icons::ICON_ASTERISK;
-use crate::icons::ICON_COMMAND;
-use crate::icons::ICON_COMMENT;
-use crate::icons::ICON_FEATHER;
-use crate::icons::ICON_FOLDER_OPENED;
-use crate::icons::ICON_GEAR;
-use crate::icons::ICON_SHIFT;
-use crate::icons::ICON_THREE_BARS;
+use crate::services::AppServices;
 use crate::theme;
 
-#[derive(IntoElement)]
 pub struct PanelSettings {
-  children: Vec<AnyElement>,
-  style: StyleRefinement,
+  config_path: SharedString,
+  editor: Entity<EditorState>,
 }
 
 impl PanelSettings {
-  pub fn new() -> Self {
+  pub fn new(
+    window: &mut Window,
+    cx: &mut Context<Self>,
+  ) -> Self {
+    let config_path = &AppServices::obtain().config.config_path;
+    // Read from disk rather than the loaded `Config`, which has its env
+    // references already interpolated.
+    let contents = fs::read_to_string(config_path)
+      .unwrap_or_else(|error| format!("# Failed to read {}: {error}\n", config_path.display()));
+
+    // `QUILL_CONFIG` may hold a relative path.
+    let absolute_path = path::absolute(config_path).unwrap_or_else(|_| config_path.clone());
+
     Self {
-      children: Vec::new(),
-      style: StyleRefinement::default(),
+      config_path: absolute_path.display().to_string().into(),
+      editor: cx.new(|cx| {
+        EditorState::new(window, cx)
+          .language("yaml")
+          .default_value(contents)
+      }),
     }
   }
 }
 
-impl Styled for PanelSettings {
-  fn style(&mut self) -> &mut StyleRefinement {
-    &mut self.style
-  }
-}
-
-impl ParentElement for PanelSettings {
-  fn extend(
-    &mut self,
-    elements: impl IntoIterator<Item = AnyElement>,
-  ) {
-    self.children.extend(elements)
-  }
-}
-
-impl RenderOnce for PanelSettings {
+impl Render for PanelSettings {
   fn render(
-    self,
+    &mut self,
     _window: &mut Window,
-    _cx: &mut App,
+    _cx: &mut Context<Self>,
   ) -> impl IntoElement {
     v_flex()
-      .id(format!("panel_settings"))
-      .child("Settings Page")
+      .id("panel_settings")
+      .size_full()
+      .child(
+        div()
+          .font_weight(FontWeight::LIGHT)
+          .text_sm()
+          .pt(px(2.0))
+          .pl(px(12.0))
+          .pb(px(2.0))
+          .text_color(rgb(theme::colors::COLOR_INPUT_PLACEHOLDER_FOREGROUND))
+          .child(self.config_path.clone()),
+      )
+      .child(
+        div().flex_1().min_h_0().overflow_hidden().child(
+          Editor::new(&self.editor)
+            .size_full()
+            // `Editor` pads its text 8px from the top and exposes no way to
+            // change it, so the padding is shifted out of the clipped parent.
+            .mt(px(-8.0))
+            .bordered(false)
+            .bg(transparent_black()),
+        ),
+      )
   }
-}
-
-fn key_icon(icon: &'static [u8]) -> AnyElement {
-  Icon::empty()
-    .data(icon)
-    .h(px(11.0))
-    .w(px(11.0))
-    .into_any_element()
-}
-
-fn suggested_item(
-  icon: &'static [u8],
-  text: &str,
-  keys: impl IntoIterator<Item = AnyElement>,
-) -> Div {
-  h_flex()
-    .w(px(300.0))
-    .gap(px(8.0))
-    .items_center()
-    .child(
-      Icon::empty()
-        .data(icon)
-        .h(px(16.0))
-        .w(px(16.0))
-        .text_color(rgb(theme::colors::COLOR_ICON_FOREGROUND)),
-    )
-    .child(label(text))
-    .child(
-      h_flex()
-        .gap(px(4.0))
-        .children(keys.into_iter().map(|key| keycap().child(key))),
-    )
-}
-
-fn label(text: &str) -> Div {
-  div()
-    .flex_1()
-    .font_weight(FontWeight::LIGHT)
-    .text_sm()
-    .text_color(rgb(theme::colors::COLOR_WATERMARK_FOREGROUND))
-    .child(text.to_string())
-}
-
-fn keycap() -> Div {
-  h_flex()
-    .justify_center()
-    .items_center()
-    .min_w(px(24.0))
-    .h(px(22.0))
-    .px(px(6.0))
-    .rounded(px(4.0))
-    .border_1()
-    .border_color(rgb(theme::colors::COLOR_KEYBINDING_BORDER))
-    .bg(rgb(theme::colors::COLOR_KEYBINDING_BACKGROUND))
-    .text_xs()
-    .text_color(rgb(theme::colors::COLOR_FOREGROUND))
 }
