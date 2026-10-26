@@ -17,7 +17,7 @@ const TITLE_BAR_HEIGHT: f32 = 42.;
 const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
 
 const UPDATE_BUTTON_HEIGHT: f32 = 24.;
-const UPDATE_BUTTON_GAP: f32 = 8.;
+const UPDATE_BUTTON_GAP: f32 = 12.;
 
 /// The window background is a tint over the blurred desktop rather than an
 /// opaque fill; the alpha is the only lever for how much shows through.
@@ -86,7 +86,7 @@ fn update_button() -> Stateful<Div> {
     .h(px(UPDATE_BUTTON_HEIGHT))
     .px(px(10.))
     .mr(px(UPDATE_BUTTON_GAP))
-    .rounded(px(6.))
+    .rounded(px(4.))
     .cursor_pointer()
     .text_xs()
     .bg(rgb(COLOR_BUTTON_BACKGROUND))
@@ -100,5 +100,5 @@ fn update_button() -> Stateful<Div> {
       cx.stop_propagation();
       window.dispatch_action(Update.boxed_clone(), cx);
     })
-    .child("Update")
+    .child("Update Available")
 }

@@ -169,7 +169,7 @@ fn update_button() -> Stateful<Div> {
     .h(px(UPDATE_BUTTON_HEIGHT))
     .px(px(10.))
     .mr(px(UPDATE_BUTTON_GAP))
-    .rounded(px(6.))
+    .rounded(px(4.))
     .cursor_pointer()
     .text_xs()
     .bg(rgb(COLOR_BUTTON_BACKGROUND))
@@ -183,5 +183,5 @@ fn update_button() -> Stateful<Div> {
       cx.stop_propagation();
       window.dispatch_action(Update.boxed_clone(), cx);
     })
-    .child("Update")
+    .child("Update Available")
 }

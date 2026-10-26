@@ -1,5 +1,6 @@
 pub mod agent;
 pub mod config;
+pub mod updates;
 
 use std::path::Path;
 use std::path::PathBuf;

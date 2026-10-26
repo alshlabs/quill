@@ -61,7 +61,7 @@ const BOUNDARY_THICKNESS: f32 = 1.;
 
 /// Fixed rather than sized to its label, because the drag strip has to reserve
 /// the button's width up front to stay out from under it.
-const UPDATE_BUTTON_WIDTH: f32 = 64.;
+const UPDATE_BUTTON_WIDTH: f32 = 120.;
 const UPDATE_BUTTON_HEIGHT: f32 = 24.;
 const UPDATE_BUTTON_GAP: f32 = 8.;
 const UPDATE_BUTTON_RESERVED_WIDTH: f32 = UPDATE_BUTTON_WIDTH + UPDATE_BUTTON_GAP;
@@ -210,7 +210,7 @@ fn update_button() -> Stateful<Div> {
     .w(px(UPDATE_BUTTON_WIDTH))
     .h(px(UPDATE_BUTTON_HEIGHT))
     .mr(px(UPDATE_BUTTON_GAP))
-    .rounded(px(6.))
+    .rounded(px(4.))
     .cursor_pointer()
     .text_xs()
     .bg(rgb(COLOR_BUTTON_BACKGROUND))
@@ -220,5 +220,5 @@ fn update_button() -> Stateful<Div> {
       cx.stop_propagation();
       window.dispatch_action(Update.boxed_clone(), cx);
     })
-    .child("Update")
+    .child("Update Available")
 }
