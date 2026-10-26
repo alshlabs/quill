@@ -40,7 +40,7 @@ pub fn bootstrap<V, F, Fut>(
         size(px(1460.), px(978.)),
       )));
 
-      options.window_min_size = Some(size(px(600.), px(400.)));
+      options.window_min_size = Some(size(px(crate::window::WINDOW_MIN_WIDTH), px(400.)));
 
       options.titlebar = Some(TitlebarOptions {
         title: None,

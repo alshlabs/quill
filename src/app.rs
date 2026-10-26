@@ -26,9 +26,11 @@ use crate::tabs::Tab;
 use crate::tabs::TabKind;
 use crate::tabs::Tabs;
 use crate::theme;
+use crate::window::WINDOW_MIN_WIDTH;
 
 const SIDEBAR_MARGIN: Pixels = px(4.0);
 const SIDEBAR_MIN_WIDTH: Pixels = px(200.0);
+const SIDEBAR_MAX_WIDTH: Pixels = px(WINDOW_MIN_WIDTH - 100.0);
 const SIDEBAR_DEFAULT_WIDTH: Pixels = px(250.0);
 const SIDEBAR_NAV_WIDTH: Pixels = px(42.0);
 const TAB_BAR_HEIGHT: Pixels = px(32.0);
@@ -310,7 +312,7 @@ impl Render for AppRoot {
             move |event, _, cx| {
               let width =
                 event.event.position.x - event.bounds.left() - SIDEBAR_MARGIN - SIDEBAR_NAV_WIDTH;
-              let width = (width >= SIDEBAR_MIN_WIDTH).then_some(width);
+              let width = (width >= SIDEBAR_MIN_WIDTH).then_some(width.min(SIDEBAR_MAX_WIDTH));
 
               if let Some(width) = width {
                 sidebar_last_width.update(cx, |last_width, _| *last_width = width);

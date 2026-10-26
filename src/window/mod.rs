@@ -20,6 +20,8 @@ mod inner;
 
 pub use inner::bootstrap;
 
+pub const WINDOW_MIN_WIDTH: f32 = 600.;
+
 // #[path = "windows/mod.rs"]
 // mod inner1;
 
