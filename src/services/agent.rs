@@ -60,14 +60,6 @@ pub fn init(config: &Config) -> Result<()> {
     std::env::set_var("GOOSE_DISABLE_KEYRING", "1");
     std::env::set_var("GOOSE_PROVIDER", PROVIDER);
 
-    if let Some(model) = config.models.first() {
-      std::env::set_var("GOOSE_MODEL", &model.model_id);
-      std::env::set_var("OPENAI_HOST", &model.provider_host);
-      std::env::set_var("GOOSE_PROVIDER__HOST", &model.provider_host);
-      std::env::set_var("OPENAI_API_KEY", &model.provider_token);
-      std::env::set_var("GOOSE_PROVIDER__API_KEY", &model.provider_token);
-    }
-
     // goose reads its storage root once, on first use, and only accepts an
     // absolute path; anything else falls back to goose's own directories.
     if let Some(root) = goose_root() {
@@ -75,6 +67,7 @@ pub fn init(config: &Config) -> Result<()> {
     }
   }
 
+  apply_config(config);
   register_builtin_extensions(goose_mcp::BUILTIN_EXTENSIONS.clone());
 
   let runtime = tokio::runtime::Builder::new_multi_thread()
@@ -86,6 +79,23 @@ pub fn init(config: &Config) -> Result<()> {
   RUNTIME
     .set(runtime)
     .map_err(|_| anyhow!("goose is already initialized"))
+}
+
+/// Points goose at the first configured model. goose reads these whenever it
+/// creates a provider, so a change reaches agents created afterwards.
+pub fn apply_config(config: &Config) {
+  let Some(model) = config.models.first() else {
+    return;
+  };
+  // Also runs while goose is live: its reads go through `std::env`, which
+  // shares a lock with `set_var`, but C code reading the environment does not.
+  unsafe {
+    std::env::set_var("GOOSE_MODEL", &model.model_id);
+    std::env::set_var("OPENAI_HOST", &model.provider_host);
+    std::env::set_var("GOOSE_PROVIDER__HOST", &model.provider_host);
+    std::env::set_var("OPENAI_API_KEY", &model.provider_token);
+    std::env::set_var("GOOSE_PROVIDER__API_KEY", &model.provider_token);
+  }
 }
 
 fn runtime() -> &'static Runtime {

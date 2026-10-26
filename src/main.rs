@@ -10,7 +10,6 @@ mod theme;
 mod window;
 
 use std::path::PathBuf;
-use std::sync::Arc;
 
 use anyhow::Context;
 use gpui_kit::*;
@@ -32,10 +31,7 @@ fn main() -> anyhow::Result<()> {
 
   services::agent::init(&config)?;
 
-  AppServices {
-    config: Arc::new(config),
-  }
-  .register_global()?;
+  AppServices::new(config).register_global()?;
 
   window::bootstrap(
     //

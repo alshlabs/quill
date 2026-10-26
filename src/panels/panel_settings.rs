@@ -10,6 +10,7 @@ use gpui_kit::*;
 
 use crate::app::Save;
 use crate::services::AppServices;
+use crate::services::agent;
 use crate::services::config::Config;
 use crate::theme;
 
@@ -31,7 +32,8 @@ impl PanelSettings {
     window: &mut Window,
     cx: &mut Context<Self>,
   ) -> Self {
-    let config_path = &AppServices::obtain().config.config_path;
+    let config = AppServices::obtain().config();
+    let config_path = &config.config_path;
     // Read from disk rather than the loaded `Config`, which has its env
     // references already interpolated.
     let contents = fs::read_to_string(config_path)
@@ -84,10 +86,14 @@ impl PanelSettings {
   ) {
     let contents = self.editor.read(cx).value();
     // The app refuses to start on a config it cannot load, so never write one.
-    let saved = Config::from_yaml(&contents, &self.config_path)
-      .and_then(|_| Ok(fs::write(&self.config_path, contents.as_bytes())?));
+    let saved = Config::from_yaml(&contents, &self.config_path).and_then(|config| {
+      fs::write(&self.config_path, contents.as_bytes())?;
+      Ok(config)
+    });
     match saved {
-      Ok(()) => {
+      Ok(config) => {
+        agent::apply_config(&config);
+        AppServices::obtain().set_config(config);
         self.saved_contents = contents;
         self.save_error = None;
         self.update_dirty(cx);

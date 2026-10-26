@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::Context as _;
 use gpui_kit::base::h_flex;
 use gpui_kit::base::v_flex;
@@ -17,6 +19,7 @@ use crate::icons::ICON_MIC;
 use crate::icons::ICON_SETTINGS;
 use crate::icons::ICON_SPARKLE;
 use crate::services::AppServices;
+use crate::services::config::Config;
 use crate::services::agent;
 use crate::services::agent::AgentEvent;
 use crate::services::agent::AgentHarness;
@@ -71,6 +74,7 @@ pub struct PanelChat {
   session_id: Option<String>,
   input: Entity<TextareaState>,
   agent: anyhow::Result<AgentHarness>,
+  agent_config: Arc<Config>,
   messages: Vec<ChatMessage>,
   scroll_handle: ScrollHandle,
   response: Option<Task<()>>,
@@ -100,13 +104,15 @@ impl PanelChat {
       }
     });
 
-    let (agent, naming) = connect_agent(None, cx);
+    let agent_config = AppServices::obtain().config();
+    let (agent, naming) = connect_agent(None, &agent_config, cx);
 
     Self {
       title: title.into(),
       session_id: None,
       input,
       agent,
+      agent_config,
       messages: Vec::new(),
       scroll_handle: ScrollHandle::new(),
       response: None,
@@ -138,7 +144,8 @@ impl PanelChat {
     self.response = None;
     self.messages.clear();
     self.session_id = Some(session_id.clone());
-    (self.agent, self._naming) = connect_agent(Some(session_id.clone()), cx);
+    self.agent_config = AppServices::obtain().config();
+    (self.agent, self._naming) = connect_agent(Some(session_id.clone()), &self.agent_config, cx);
 
     let history = agent::load_history(session_id);
     self._history = Some(cx.spawn(async move |this, cx| {
@@ -184,6 +191,15 @@ impl PanelChat {
     let text = self.input.read(cx).value().trim().to_string();
     if text.is_empty() || self.response.is_some() {
       return;
+    }
+
+    // Reconnecting only between responses keeps the session id settled, so a
+    // first prompt still in flight can't leave the new agent opening a second
+    // session.
+    let config = AppServices::obtain().config();
+    if !Arc::ptr_eq(&config, &self.agent_config) {
+      (self.agent, self._naming) = connect_agent(self.session_id.clone(), &config, cx);
+      self.agent_config = config;
     }
 
     self
@@ -262,10 +278,10 @@ impl PanelChat {
 
 fn connect_agent(
   session_id: Option<String>,
+  config: &Config,
   cx: &mut Context<PanelChat>,
 ) -> (anyhow::Result<AgentHarness>, Option<Task<()>>) {
-  let mut agent = AppServices::obtain()
-    .config
+  let mut agent = config
     .models
     .first()
     .context("No models configured")
