@@ -1,6 +1,6 @@
 [package]
 name = "quill"
-version = "0.0.1"
+version = "0.0.0-local"
 edition = "2024"
 license-file = "LICENSE.md"
 
@@ -30,3 +30,6 @@ semver = "1.0.28"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 raw-window-handle = "0.6"
+
+[build-dependencies]
+winresource = "0.1.34"

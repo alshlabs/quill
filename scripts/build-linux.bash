@@ -8,7 +8,7 @@ APP_NAME="Quill"
 BIN_NAME="quill"
 ARCH="$(uname -m)"
 TARGET="${TARGET:-}"
-ICON="${ICON:-$ROOT/src/icons/bootstrap-icons-1.13.1/feather.svg}"
+ICON="${ICON:-$ROOT/resources/icon.svg}"
 ICON_EXT="${ICON##*.}"
 
 if [ -n "$TARGET" ]; then

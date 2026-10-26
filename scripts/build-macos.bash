@@ -23,6 +23,7 @@ rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
 
 cp "$RELEASE_DIR/$BIN_NAME" "$APP_DIR/Contents/MacOS/$BIN_NAME"
+cp "$ROOT/resources/icon.icns" "$APP_DIR/Contents/Resources/AppIcon.icns"
 
 cat > "$APP_DIR/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -37,6 +38,8 @@ cat > "$APP_DIR/Contents/Info.plist" <<EOF
   <string>$BUNDLE_ID</string>
   <key>CFBundleExecutable</key>
   <string>$BIN_NAME</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleVersion</key>
