@@ -1,64 +1,84 @@
 # Quill
 
-## Performance Obsessed LLM Harness
+## The lightweight, native desktop harness for every LLM
 
-Running Claude or Codex desktop, the applications are sluggish and heavy. Codex uses _1 gigabyte_ of ram for just the UI. This is due to the fact that they ship a full browser along with their application code and their application code is written in JavaScript. 
-
-This technical choice has historically been practical for cross-platform development because developing seperate dedicated native applications using native technologies was an expensive process.
-
-But we are in the age of AI and, by Grayskull, there's no excuse to ship low quality applications.
-
-## Downloads
-
-|Platform|Type|Link|
-|-|-|-|
-|Windows|Portable Executable|https://github.com/alshlabs/quill/releases/latest/download/quill-windows-amd64.zip|
-|MacOS|`.app` file|https://github.com/alshlabs/quill/releases/latest/download/quill-macos-arm64.tar.gz|
-|Linux|`AppImage`|https://github.com/alshlabs/quill/releases/latest/download/quill-linux-arm64.tar.gz|
-
-_Note: Configure your models under `$HOME/.config/quill/config.yml`_
-
-## Introducing Quill
-
-https://github.com/user-attachments/assets/8335baf6-c4ed-4f25-a554-4dc7140fc3c7
+- Native Desktop UI APIs (No Electron)
+- Minimal resource footprint, under 70mb of ram
+- Extremely fast Rust core
+- Supports every LLM provider, no lock down
 
 <div align="center">
 <img src="./docs/screenshot-2026-10-25.png" />
-<div align="center"><i>Look familiar?</i></div>
+<div align="center"><i>Based on VSCode's design</i></div>
 </div>
-
 <br>
 
-This is an LLM harness that uses a miniscule **60mb of ram** and runs at the framerate of your monitor (e.g. 144fps).
+## Downloads
 
-It's not even fully optimized yet.
+Download from Github releases and run. Uses portable executables so no install is required.
+
+To uninstall delete the executable and the config under `$HOME/.config/quill`.
+
+
+|Platform|Link|
+|-|-|
+|Windows|[quill.exe](https://github.com/alshlabs/quill/releases/latest/download/quill-windows-amd64.zip)|
+|Windows Arm64|[quill.exe](https://github.com/alshlabs/quill/releases/latest/download/quill-windows-arm64.zip)|
+|MacOS|[Quill.app](https://github.com/alshlabs/quill/releases/latest/download/quill-macos-arm64.tar.gz)|
+|Linux|[Quill.AppImage](https://github.com/alshlabs/quill/releases/latest/download/quill-linux-amd64.tar.gz)|
+|Linux Arm64|[Quill.AppImage](https://github.com/alshlabs/quill/releases/latest/download/quill-linux-arm64.tar.gz)|
+
+_Note: the MacOS build is unsigned because I am not spending US$99/year for an Apple developer account_
+
+## Demo
+
+https://github.com/user-attachments/assets/8335baf6-c4ed-4f25-a554-4dc7140fc3c7
+
 
 <div align="center">
 <img src="./docs/usage-2026-10-25.png" />
 </div>
 
-## But, How?
+## How does this work?
 
-Quill uses a tiny game engine to render UI widgets. This allows it to leverage APIs like Metal, Vulkan and DirectX while also being absolutely tiny.
+Quill leverages the work done by the [Zed editor](https://zed.dev/), utilizing their cross platform [gpui-kit](https://crates.io/crates/gpui-kit).
 
-Naturally, game engines are crazy optimized, so the UI runs butter smooth and uses pretty much no resources.
+Simply put, gpui leverages native APIs (Metal, Vulkan and DirectX) to draw the UI. You can think of it as using a game engine to render a UI, except it only renders frames when things are moving, ensuring power usage / battery life is unaffected.
 
-Quill leverages the work done by the [Zed editor](https://zed.dev/), utilizing their [gpui-kit](https://crates.io/crates/gpui-kit). It's super easy to use, basically HTML and CSS.
+## Motivation for this project
 
-## But, Why?
+All the current desktop harnesses are built on top of Electron (basically a full-fat dedicated clone of Chrome running only one website, their UI).
 
-Have you seen the price of ram? I had to sell my Pokemon card collection just to get an extra 4gb of ram in my MacBook Pro... and it's still not enough.
+Conventionally, this is done to minimize the friction associated with cross-platform application development and be competitive in feature delivery. Essentially, sacrifice a little user experience in exchange for the ability to move faster than competitors.
 
-I sort of view this as something of a case study on the fact that we can, in fact, develop high quality cross-platform applications today and it's actually not that hard.
+In my view, harnesses have reached a level of maturity now where the features we expect from them are well enough defined. In addition,there is no longer the pressure to be a first mover in the Desktop Agent Harness space. 
 
-Also, these days, software has never been worse to use. Encarpification, call it what you will, but it's just really fun to make something super high quality.
+I think we can now afford a high quality tool that respects your computers resources while also supporting all model providers.
+
+Additionally, the technology powering Quill means that adding features is not so hard that it justifies an Electron build.
 
 ## Credits & Licenses
 
 * UI Icons from [Codicons](https://github.com/microsoft/vscode-codicons) by Microsoft ([CC BY 4.0](https://github.com/microsoft/vscode-codicons/blob/main/LICENSE)).
+* UI Icons from [Font Awesome Free](https://github.com/FortAwesome/Font-Awesome) by Fonticons, Inc. ([CC BY 4.0](https://fontawesome.com/license/free)).
+* UI Icons from [Bootstrap Icons](https://github.com/twbs/icons) by The Bootstrap Authors ([MIT](https://github.com/twbs/icons/blob/main/LICENSE)).
+* UI framework [GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui) from the [Zed](https://zed.dev) editor by Zed Industries ([Apache 2.0](https://github.com/zed-industries/zed/blob/main/crates/gpui/LICENSE-APACHE)).
+
+## License
+
+I have gone with an unconventional non-commercial license that has an clause for AI training. I'm not anti-AI at all (obviously) and have no expectations that my license will be respected. 
+
+The intention is that - should this code be included in training data - throw a little something my way for the training data.
+
+If you're doing research or working on an open weight model, feel free to include this in your training data.
 
 ## Support The Development
 
-Donate with Wise:
+This is a weekend project of mine. If you genuinely enjoy it and want to see more, please consider starring the repo and supporting my efforts.
 
-[<img height="200px" src="docs/donate.png" >](https://wise.com/pay/me/davidsama1)
+<div align="center">
+<a href="https://wise.com/pay/me/davidsama1">
+<img src="docs/donate.png" />
+<div align="center"><i>Donate with Wise</i></div>
+</a>
+</div>
