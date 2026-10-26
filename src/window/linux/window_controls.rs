@@ -21,7 +21,7 @@ const WINDOW_CONTROL_WIDTH: f32 = 32.;
 const WINDOW_CONTROL_ICON_SIZE: f32 = 16.;
 
 /// Diameter of the hover/active highlight, centred inside the button cell.
-const WINDOW_CONTROL_HIGHLIGHT_SIZE: f32 = 30.;
+const WINDOW_CONTROL_HIGHLIGHT_SIZE: f32 = 26.;
 
 #[derive(Clone, Copy, IntoElement)]
 pub enum WindowControl {
