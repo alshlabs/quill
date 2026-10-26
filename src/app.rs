@@ -284,8 +284,7 @@ impl Render for AppRoot {
       window.use_keyed_state("sidebar-last-width", cx, |_, _| SIDEBAR_DEFAULT_WIDTH);
     let dragging = window.use_keyed_state("storybook-sidebar-dragging", cx, |_, _| false);
     let hovered = window.use_keyed_state("storybook-dragbar-hovered", cx, |_, _| false);
-    let sidebar_view =
-      window.use_keyed_state("sidebar-view", cx, |_, _| Some(SidebarView::Chats));
+    let sidebar_view = window.use_keyed_state("sidebar-view", cx, |_, _| Some(SidebarView::Chats));
     let view = *sidebar_view.read(cx);
 
     v_flex()
