@@ -4,13 +4,17 @@ use std::path::PathBuf;
 
 use anyhow::Context as _;
 use serde::Deserialize;
+use serde::Deserializer;
+use serde_yaml::Value;
 
 const ENV_PREFIX: &str = "${env.";
+const DEFAULT_CONFIG: &str = include_str!("../../quill.yaml.default");
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Config {
   #[serde(skip)]
   pub config_path: PathBuf,
+  #[serde(default, deserialize_with = "null_as_empty")]
   pub models: Vec<AgentConfig>,
 }
 
@@ -34,7 +38,11 @@ impl Config {
     content: &str,
     file_path: &Path,
   ) -> anyhow::Result<Self> {
-    let mut config = serde_yaml::from_str::<Config>(&interpolate_env(content)?)?;
+    // Interpolated after parsing so that references in comments are ignored
+    // and values cannot change the YAML structure.
+    let mut value = serde_yaml::from_str::<Value>(content)?;
+    interpolate_values(&mut value)?;
+    let mut config = serde_yaml::from_value::<Config>(value)?;
     config.config_path = file_path.to_path_buf();
     Ok(config)
   }
@@ -54,7 +62,7 @@ impl Config {
 
     if !config_path.is_file() {
       fs::create_dir_all(config_path.parent().context("Invalid config path")?)?;
-      fs::write(&config_path, "models: []\n")?;
+      fs::write(&config_path, DEFAULT_CONFIG)?;
     }
 
     Ok(config_path)
@@ -85,6 +93,22 @@ impl Config {
       .find_map(find_config_in)
       .or_else(|| home::home_dir().and_then(|home| find_config_in(&home)))
   }
+}
+
+// `models:` with every entry commented out, as in the default config, is null.
+fn null_as_empty<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<AgentConfig>, D::Error> {
+  Ok(Option::deserialize(deserializer)?.unwrap_or_default())
+}
+
+fn interpolate_values(value: &mut Value) -> anyhow::Result<()> {
+  match value {
+    Value::String(text) => *text = interpolate_env(text)?,
+    Value::Sequence(items) => items.iter_mut().try_for_each(interpolate_values)?,
+    Value::Mapping(entries) => entries.values_mut().try_for_each(interpolate_values)?,
+    Value::Tagged(tagged) => interpolate_values(&mut tagged.value)?,
+    Value::Null | Value::Bool(_) | Value::Number(_) => {}
+  }
+  Ok(())
 }
 
 fn interpolate_env(content: &str) -> anyhow::Result<String> {
