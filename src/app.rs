@@ -208,7 +208,8 @@ impl AppRoot {
     window: &mut Window,
     cx: &mut Context<Self>,
   ) {
-    self.add_chat(window, cx);
+    let chat = self.add_chat(window, cx);
+    chat.update(cx, |chat, cx| chat.focus_input(window, cx));
   }
 
   fn open_settings(

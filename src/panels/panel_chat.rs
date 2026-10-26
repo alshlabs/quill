@@ -143,6 +143,14 @@ impl PanelChat {
     self.session_id.as_deref()
   }
 
+  pub fn focus_input(
+    &self,
+    window: &mut Window,
+    cx: &mut Context<Self>,
+  ) {
+    self.input.update(cx, |input, cx| input.focus(window, cx));
+  }
+
   /// Replaces this chat with a stored session: its history is shown and new
   /// prompts continue that session.
   pub fn load_session(
