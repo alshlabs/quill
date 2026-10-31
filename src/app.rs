@@ -4,6 +4,7 @@ use gpui_kit::component::Icon;
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
+use crate::icons::ICON_ADD;
 use crate::icons::ICON_BELL;
 use crate::icons::ICON_BRUSH;
 use crate::icons::ICON_CLOSE;
@@ -627,6 +628,10 @@ fn tab_bar(
       let item = tab_bar_item(tabs, tab, active == Some(tab.id), ix == 0, cx).into_any_element();
       separator.into_iter().chain([item])
     }))
+    .child(tab_separator(
+      items.last().is_some_and(|tab| active != Some(tab.id)),
+    ))
+    .child(tab_bar_new_chat())
     .child(
       div()
         .id("tab-bar-empty")
@@ -649,6 +654,27 @@ fn tab_separator(visible: bool) -> Div {
     .when(visible, |this| {
       this.bg(rgb(theme::colors::COLOR_EDITOR_BORDER))
     })
+}
+
+fn tab_bar_new_chat() -> Stateful<Div> {
+  h_flex()
+    .id("tab-bar-new-chat")
+    .flex_shrink_0()
+    .justify_center()
+    .items_center()
+    .w(px(24.0))
+    .h(px(24.0))
+    .mx(px(4.0))
+    .rounded(px(4.0))
+    .cursor_pointer()
+    .text_color(rgb(theme::colors::COLOR_TAB_INACTIVE_FOREGROUND))
+    .hover(|this| {
+      this
+        .bg(rgba(theme::colors::COLOR_TOOLBAR_HOVER_BACKGROUND_A))
+        .text_color(rgb(theme::colors::COLOR_FOREGROUND))
+    })
+    .on_click(|_, window, cx| window.dispatch_action(NewChat.boxed_clone(), cx))
+    .child(Icon::empty().data(ICON_ADD).h(px(14.0)).w(px(14.0)))
 }
 
 fn tab_bar_item(
