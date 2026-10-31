@@ -15,10 +15,7 @@
 
 ## Downloads
 
-Download from Github releases and run. Uses portable executables so no install is required.
-
-To uninstall delete the executable and the config under `$HOME/.config/quill`.
-
+Download from Github releases and run, self updating, no installer require.
 
 |Platform|Link|
 |-|-|
@@ -29,6 +26,10 @@ To uninstall delete the executable and the config under `$HOME/.config/quill`.
 |Linux Arm64|[Quill.AppImage](https://github.com/alshlabs/quill/releases/latest/download/quill-linux-arm64.tar.gz)|
 
 _Note: the MacOS build is unsigned because I am not spending US$99/year for an Apple developer account_
+
+### Uninstalling
+
+Uses portable executables. To uninstall delete the executable and the config under `$HOME/.config/quill`.
 
 ## Demo
 
