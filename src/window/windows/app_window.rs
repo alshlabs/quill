@@ -43,12 +43,12 @@ use super::window_decoration::{self};
 use crate::app::Update;
 use crate::app::UpdateState;
 use crate::icons::ICON_FEATHER;
+use crate::theme::colors::COLOR_ACTIVITY_BAR_FOREGROUND;
 use crate::theme::colors::COLOR_BUTTON_BACKGROUND;
 use crate::theme::colors::COLOR_BUTTON_FOREGROUND;
 use crate::theme::colors::COLOR_BUTTON_HOVER_BACKGROUND;
 use crate::theme::colors::COLOR_FOREGROUND;
 use crate::theme::colors::COLOR_GREY_50;
-use crate::theme::colors::COLOR_ACTIVITY_BAR_FOREGROUND;
 use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
 use crate::theme::colors::COLOR_WINDOW_INACTIVE_BACKGROUND;
 
