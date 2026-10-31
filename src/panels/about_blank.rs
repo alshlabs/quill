@@ -3,9 +3,11 @@ use gpui_kit::RenderOnce;
 use gpui_kit::base::h_flex;
 use gpui_kit::base::v_flex;
 use gpui_kit::component::Icon;
+use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
 use crate::app::NewChat;
+use crate::app::OpenSettings;
 use crate::icons::ICON_ASTERISK;
 use crate::icons::ICON_COMMAND;
 use crate::icons::ICON_COMMENT;
@@ -13,6 +15,8 @@ use crate::icons::ICON_FEATHER;
 use crate::icons::ICON_FOLDER_OPENED;
 use crate::icons::ICON_GEAR;
 use crate::theme;
+
+const SUGGESTED_ITEM_GROUP: &str = "suggested_item";
 
 #[derive(IntoElement)]
 pub struct PanelAboutBlank {
@@ -79,18 +83,27 @@ fn body(id: &ElementId) -> Stateful<Div> {
     )
     .child(
       v_flex()
-        .gap(px(8.0))
         .child(suggested_item(
+          "new_chat",
           ICON_COMMENT,
           "Start new chat",
           shortcut("N"),
+          Some(&NewChat),
         ))
         .child(suggested_item(
+          "open_workspace",
           ICON_FOLDER_OPENED,
           "Open Workspace",
           shortcut("O"),
+          None,
         ))
-        .child(suggested_item(ICON_GEAR, "Settings", shortcut(","))),
+        .child(suggested_item(
+          "settings",
+          ICON_GEAR,
+          "Settings",
+          shortcut(","),
+          Some(&OpenSettings),
+        )),
     )
 }
 
@@ -112,14 +125,29 @@ fn key_icon(icon: &'static [u8]) -> AnyElement {
 }
 
 fn suggested_item(
+  id: &'static str,
   icon: &'static [u8],
   text: &str,
   keys: impl IntoIterator<Item = AnyElement>,
-) -> Div {
+  action: Option<&dyn Action>,
+) -> Stateful<Div> {
+  let action = action.map(|action| action.boxed_clone());
   h_flex()
+    .id(id)
+    .group(SUGGESTED_ITEM_GROUP)
     .w(px(300.0))
     .gap(px(8.0))
+    .px(px(8.0))
+    .py(px(4.0))
+    .rounded(px(4.0))
     .items_center()
+    .hover(|this| this.bg(rgba(theme::colors::COLOR_TOOLBAR_HOVER_BACKGROUND_A)))
+    .when_some(action, |this, action| {
+      this.cursor_pointer().on_click(move |_, window, cx| {
+        cx.stop_propagation();
+        window.dispatch_action(action.boxed_clone(), cx);
+      })
+    })
     .child(
       Icon::empty()
         .data(icon)
@@ -141,6 +169,9 @@ fn label(text: &str) -> Div {
     .font_weight(FontWeight::LIGHT)
     .text_sm()
     .text_color(rgb(theme::colors::COLOR_WATERMARK_FOREGROUND))
+    .group_hover(SUGGESTED_ITEM_GROUP, |this| {
+      this.text_color(rgb(theme::colors::COLOR_FOREGROUND))
+    })
     .child(text.to_string())
 }
 
