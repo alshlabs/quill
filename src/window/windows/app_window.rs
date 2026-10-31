@@ -43,17 +43,18 @@ use super::window_decoration::{self};
 use crate::app::Update;
 use crate::app::UpdateState;
 use crate::icons::ICON_FEATHER;
-use crate::theme::colors::COLOR_BRAND_FOREGROUND;
 use crate::theme::colors::COLOR_BUTTON_BACKGROUND;
 use crate::theme::colors::COLOR_BUTTON_FOREGROUND;
 use crate::theme::colors::COLOR_BUTTON_HOVER_BACKGROUND;
 use crate::theme::colors::COLOR_FOREGROUND;
 use crate::theme::colors::COLOR_GREY_50;
+use crate::theme::colors::COLOR_ACTIVITY_BAR_FOREGROUND;
 use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
 use crate::theme::colors::COLOR_WINDOW_INACTIVE_BACKGROUND;
 
 const TITLE_BAR_HEIGHT: f32 = 42.;
-const BRAND_LOGO_SIZE: f32 = 16.;
+const BRAND_LOGO_SIZE: f32 = 20.;
+const BRAND_COLOR: u32 = COLOR_ACTIVITY_BAR_FOREGROUND;
 /// Centres the logo over the sidebar nav icons, which sit 26px in from the
 /// window's inner edge (`SIDEBAR_MARGIN`, a 1px border and half of
 /// `SIDEBAR_NAV_WIDTH` in `app.rs`).
@@ -188,7 +189,7 @@ impl<V> AppRoot<V> {
                   .data(ICON_FEATHER)
                   .h(px(BRAND_LOGO_SIZE))
                   .w(px(BRAND_LOGO_SIZE))
-                  .text_color(rgb(COLOR_BRAND_FOREGROUND)),
+                  .text_color(rgb(BRAND_COLOR)),
               ),
           ),
       )

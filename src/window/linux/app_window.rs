@@ -14,7 +14,7 @@ use super::window_decoration::{self};
 use crate::app::Update;
 use crate::app::UpdateState;
 use crate::icons::ICON_FEATHER;
-use crate::theme;
+use crate::theme::colors::COLOR_ACTIVITY_BAR_FOREGROUND;
 use crate::theme::colors::COLOR_BUTTON_BACKGROUND;
 use crate::theme::colors::COLOR_BUTTON_FOREGROUND;
 use crate::theme::colors::COLOR_BUTTON_HOVER_BACKGROUND;
@@ -23,7 +23,8 @@ use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
 use crate::theme::colors::COLOR_WINDOW_INACTIVE_BACKGROUND;
 
 const TITLE_BAR_HEIGHT: f32 = 42.;
-const BRAND_LOGO_SIZE: f32 = 24.;
+const BRAND_LOGO_SIZE: f32 = 20.;
+const BRAND_COLOR: u32 = COLOR_ACTIVITY_BAR_FOREGROUND;
 const BRAND_LOGO_INSET: f32 = 26. - BRAND_LOGO_SIZE / 2.;
 
 const UPDATE_BUTTON_HEIGHT: f32 = 24.;
@@ -147,7 +148,7 @@ impl<V> AppRoot<V> {
                   .data(ICON_FEATHER)
                   .h(px(BRAND_LOGO_SIZE))
                   .w(px(BRAND_LOGO_SIZE))
-                  .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND)),
+                  .text_color(rgb(BRAND_COLOR)),
               ),
           ),
       )
