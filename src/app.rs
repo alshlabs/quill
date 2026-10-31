@@ -360,14 +360,26 @@ fn status_bar() -> Div {
     .justify_between()
     .items_center()
     .child(
-      // Spans the sidebar's margin and 1px borders so the icon centres on the nav column.
       h_flex()
-        .flex_shrink_0()
-        .w(SIDEBAR_MARGIN + SIDEBAR_NAV_WIDTH + px(2.0))
-        .pl(SIDEBAR_MARGIN + px(1.0))
-        .pr(px(1.0))
-        .justify_center()
-        .child(status_bar_item("status-bar-remote", ICON_REMOTE)),
+        .min_w_0()
+        .items_center()
+        .child(
+          // Spans the sidebar's margin and 1px borders so the icon centres on the nav column.
+          h_flex()
+            .flex_shrink_0()
+            .w(SIDEBAR_MARGIN + SIDEBAR_NAV_WIDTH + px(2.0))
+            .pl(SIDEBAR_MARGIN + px(1.0))
+            .pr(px(1.0))
+            .justify_center()
+            .child(status_bar_item("status-bar-remote", ICON_REMOTE)),
+        )
+        .child(
+          div()
+            .truncate()
+            .text_xs()
+            .text_color(rgb(theme::colors::COLOR_TAB_INACTIVE_FOREGROUND))
+            .child("No workspace"),
+        ),
     )
     .child(
       h_flex()
