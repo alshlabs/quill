@@ -8,7 +8,7 @@
 - Supports every LLM provider, no lock down
 
 <div align="center">
-<img src="./docs/screenshot-2026-10-25.png" />
+<img width="800" alt="Screenshot 2026-10-31 at 10 50 53 PM" src="https://github.com/user-attachments/assets/d82f7e9a-24fe-4c29-a864-bfbeb279f27e" />
 <div align="center"><i>Based on VSCode's design</i></div>
 </div>
 <br>
