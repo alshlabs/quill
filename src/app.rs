@@ -4,12 +4,14 @@ use gpui_kit::component::Icon;
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
+use crate::icons::ICON_BELL;
 use crate::icons::ICON_BRUSH;
 use crate::icons::ICON_CLOSE;
 use crate::icons::ICON_EXTENSIONS;
 use crate::icons::ICON_FOLDER_OPENED;
 use crate::icons::ICON_GEAR;
 use crate::icons::ICON_NEW_SESSION;
+use crate::icons::ICON_REMOTE;
 use crate::icons::ICON_SEARCH;
 use crate::panels::about_blank::PanelAboutBlank;
 use crate::panels::panel_chat::ChatEvent;
@@ -346,8 +348,54 @@ impl Render for AppRoot {
           .child(main_content().child(tab_view(&self.tabs, cx))),
       )
       // Main body
-      .child(div().flex_shrink_0().h(px(30.0)))
+      .child(status_bar())
   }
+}
+
+fn status_bar() -> Div {
+  h_flex()
+    .flex_shrink_0()
+    .h(px(30.0))
+    .pr(SIDEBAR_MARGIN)
+    .justify_between()
+    .items_center()
+    .child(
+      // Spans the sidebar's margin and 1px borders so the icon centres on the nav column.
+      h_flex()
+        .flex_shrink_0()
+        .w(SIDEBAR_MARGIN + SIDEBAR_NAV_WIDTH + px(2.0))
+        .pl(SIDEBAR_MARGIN + px(1.0))
+        .pr(px(1.0))
+        .justify_center()
+        .child(status_bar_item("status-bar-remote", ICON_REMOTE)),
+    )
+    .child(
+      h_flex()
+        .w(SIDEBAR_NAV_WIDTH)
+        .justify_center()
+        .child(status_bar_item("status-bar-notifications", ICON_BELL)),
+    )
+}
+
+fn status_bar_item(
+  id: &'static str,
+  icon: &'static [u8],
+) -> Stateful<Div> {
+  h_flex()
+    .id(id)
+    .justify_center()
+    .items_center()
+    .w(px(32.0))
+    .h(px(22.0))
+    .rounded(px(4.0))
+    .cursor_pointer()
+    .text_color(rgb(theme::colors::COLOR_ICON_FOREGROUND))
+    .hover(|this| {
+      this
+        .bg(rgba(theme::colors::COLOR_TOOLBAR_HOVER_BACKGROUND_A))
+        .text_color(rgb(theme::colors::COLOR_WHITE))
+    })
+    .child(Icon::empty().data(icon).h(px(16.0)).w(px(16.0)))
 }
 
 struct DraggedSidebar;

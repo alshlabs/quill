@@ -22,4 +22,6 @@ pub const ICON_SPARKLE          : &[u8] = include_bytes!("./vscode/sparkle.svg")
 // pub const ICON_SETTINGS         : &[u8] = include_bytes!("./vscode/settings.svg");
 // pub const ICON_MIC              : &[u8] = include_bytes!("./vscode/mic.svg");
 pub const ICON_ARROW_UP         : &[u8] = include_bytes!("./vscode/arrow-up.svg");
+pub const ICON_REMOTE           : &[u8] = include_bytes!("./vscode/remote.svg");
+pub const ICON_BELL             : &[u8] = include_bytes!("./vscode/bell.svg");
 // pub const ICON_ADD              : &[u8] = include_bytes!("./vscode/add.svg");
