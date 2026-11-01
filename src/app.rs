@@ -81,6 +81,22 @@ pub fn init(cx: &mut App) {
     KeyBinding::new("ctrl-tab", NextTab, None),
     KeyBinding::new("ctrl-shift-tab", PrevTab, None),
   ]);
+
+  check_for_update(cx);
+}
+
+fn check_for_update(cx: &mut App) {
+  let check = updates::check_for_update();
+  cx.spawn(async move |cx| {
+    let Ok(Some(_)) = check.await else {
+      return;
+    };
+    cx.update(|cx| {
+      cx.set_global(UpdateState::Available);
+      cx.refresh_windows();
+    });
+  })
+  .detach();
 }
 
 pub struct AppRoot {
@@ -88,7 +104,6 @@ pub struct AppRoot {
   tabs: Entity<Tabs>,
   sidebar_chats: Entity<SidebarChats>,
   _subscriptions: Vec<Subscription>,
-  _update: Option<Task<()>>,
 }
 
 impl AppRoot {
@@ -119,31 +134,12 @@ impl AppRoot {
       }),
     ];
 
-    let mut this = Self {
+    Self {
       focus_handle,
       tabs,
       sidebar_chats,
       _subscriptions: subscriptions,
-      _update: None,
-    };
-    this.check_for_update(cx);
-    this
-  }
-
-  fn check_for_update(
-    &mut self,
-    cx: &mut Context<Self>,
-  ) {
-    let check = updates::check_for_update();
-    self._update = Some(cx.spawn(async move |this, cx| {
-      let Ok(Some(_)) = check.await else {
-        return;
-      };
-      let _ = this.update(cx, |_, cx| {
-        cx.set_global(UpdateState::Available);
-        cx.notify();
-      });
-    }));
+    }
   }
 
   fn install_update(
