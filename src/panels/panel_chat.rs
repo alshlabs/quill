@@ -342,6 +342,12 @@ fn chat_message((ix, message): (usize, &ConversationMessage)) -> AnyElement {
         ToolStatus::Failed => format!("{} failed", message.text),
       })
       .into_any_element(),
+    MessageRole::Cancelled => div()
+      .id(id)
+      .text_xs()
+      .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND))
+      .child("Cancelled")
+      .into_any_element(),
     MessageRole::Error => div()
       .id(id)
       .text_sm()

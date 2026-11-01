@@ -22,6 +22,7 @@ use goose::config::Config as GooseConfig;
 use goose::config::GooseMode;
 use goose::config::PermissionManager;
 use goose::conversation::message::Message;
+use goose::conversation::message::SystemNotificationType;
 use goose::model_config::model_config_from_user_config;
 use goose::providers::api_client::ApiClient;
 use goose::providers::api_client::AuthMethod;
@@ -46,6 +47,9 @@ const PROVIDER: &str = "openai";
 const PROVIDER_NAME: &str = "quill";
 const SESSION_NAME: &str = "quill";
 const UNTITLED_CHAT: &str = "Untitled chat";
+// Stored in sessions and matched when loading them, so changing it hides the
+// marker in chats cancelled before the change.
+const CANCELLED_NOTIFICATION: &str = "quill:cancelled";
 const AGENT_STACK_SIZE: usize = 32 * 1024 * 1024;
 const GOOSE_ROOT: &str = ".config/quill";
 const SCRATCH_DIR: &str = "scratch";
@@ -106,6 +110,7 @@ pub struct ChatSummary {
 pub enum HistoryRole {
   User,
   Agent,
+  Cancelled,
 }
 
 pub struct HistoryMessage {
@@ -157,6 +162,13 @@ pub fn load_history(session_id: String) -> impl Future<Output = Result<ChatHisto
       .flat_map(|conversation| conversation.messages().iter())
       .filter(|message| message.is_user_visible())
       .filter_map(|message| {
+        if is_cancelled_marker(message) {
+          return Some(HistoryMessage {
+            role: HistoryRole::Cancelled,
+            message_id: message.id.clone(),
+            text: String::new(),
+          });
+        }
         let text = message.as_concat_text();
         if text.is_empty() {
           return None;
@@ -260,6 +272,7 @@ pub enum AgentEvent {
     id: String,
     failed: bool,
   },
+  Cancelled,
   Error(String),
 }
 
@@ -602,10 +615,39 @@ async fn respond(
       Ok(_) => {}
       Err(error) => {
         fail(&prompt.tx, error);
-        return;
+        break;
       }
     }
   }
+
+  if prompt.cancel.is_cancelled() {
+    let marker = Message::assistant()
+      .with_system_notification(
+        SystemNotificationType::InlineMessage,
+        CANCELLED_NOTIFICATION,
+      )
+      .with_generated_id_if_missing();
+    let saved = agent
+      .config
+      .session_manager
+      .add_message(&session.id, &marker)
+      .await;
+    let _ = prompt.tx.send(AgentEvent::Cancelled);
+    if let Err(error) = saved {
+      fail(&prompt.tx, error);
+    }
+  }
+}
+
+fn is_cancelled_marker(message: &Message) -> bool {
+  message
+    .content
+    .iter()
+    .filter_map(|content| content.as_system_notification())
+    .any(|notification| {
+      notification.notification_type == SystemNotificationType::InlineMessage
+        && notification.msg == CANCELLED_NOTIFICATION
+    })
 }
 
 fn fail(

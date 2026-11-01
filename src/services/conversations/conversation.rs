@@ -39,6 +39,7 @@ pub enum MessageRole {
   Agent,
   Thinking,
   Tool(ToolStatus),
+  Cancelled,
   Error,
 }
 
@@ -72,6 +73,14 @@ impl ConversationMessage {
       text,
     }
   }
+
+  fn cancelled() -> Self {
+    Self {
+      role: MessageRole::Cancelled,
+      message_id: None,
+      text: String::new(),
+    }
+  }
 }
 
 impl From<HistoryMessage> for ConversationMessage {
@@ -80,6 +89,7 @@ impl From<HistoryMessage> for ConversationMessage {
       role: match message.role {
         HistoryRole::User => MessageRole::User,
         HistoryRole::Agent => MessageRole::Agent,
+        HistoryRole::Cancelled => MessageRole::Cancelled,
       },
       message_id: message.message_id,
       text: message.text,
@@ -367,6 +377,9 @@ impl Conversation {
             }
             AgentEvent::ToolResult { id, failed } => {
               self.apply(ConversationUpdate::ToolResult { id, failed })
+            }
+            AgentEvent::Cancelled => {
+              self.apply(ConversationUpdate::Message(ConversationMessage::cancelled()))
             }
             AgentEvent::Error(error) => self.apply(ConversationUpdate::Message(
               ConversationMessage::error(error),
