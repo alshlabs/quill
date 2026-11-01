@@ -9,7 +9,7 @@ use gpui_kit::*;
 use super::app_window::AppRoot;
 use crate::app::NewWindow;
 
-const TITLE_BAR_HEIGHT: f32 = 42.;
+const TITLE_BAR_HEIGHT: f32 = 35.;
 const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
 
 const WINDOW_RADIUS: f32 = 12.;

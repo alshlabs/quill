@@ -11,9 +11,9 @@ use crate::app::NewWindow;
 use crate::theme;
 
 const TRAFFIC_LIGHT_X: f32 = 15.;
-const TRAFFIC_LIGHT_Y: f32 = 14.0;
+const TRAFFIC_LIGHT_Y: f32 = 10.5;
 
-const TITLE_BAR_HEIGHT: f32 = 48.;
+const TITLE_BAR_HEIGHT: f32 = 35.;
 const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
 
 actions!(quill, [Quit]);

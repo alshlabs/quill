@@ -14,7 +14,7 @@ use crate::theme::colors::COLOR_BUTTON_HOVER_BACKGROUND;
 use crate::theme::colors::COLOR_FOREGROUND;
 use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
 
-pub const TITLE_BAR_HEIGHT: f32 = 42.;
+pub const TITLE_BAR_HEIGHT: f32 = 35.;
 const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
 
 const UPDATE_BUTTON_HEIGHT: f32 = 24.;
