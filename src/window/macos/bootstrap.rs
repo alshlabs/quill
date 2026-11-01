@@ -16,6 +16,8 @@ const TRAFFIC_LIGHT_Y: f32 = 14.0;
 const TITLE_BAR_HEIGHT: f32 = 48.;
 const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
 
+actions!(quill, [Quit]);
+
 pub fn bootstrap<V, F, Fut>(
   init_callback: impl FnOnce(&mut App) + 'static,
   spawn_callback: F,
@@ -87,6 +89,15 @@ pub fn bootstrap<V, F, Fut>(
     crate::theme::set_mode(ThemeMode::Dark, cx);
 
     init_callback(cx);
+
+    cx.bind_keys([KeyBinding::new("cmd-q", Quit, None)]);
+    cx.on_action(|_: &Quit, cx| cx.quit());
+    // macOS always shows the first menu as the application menu, under the app's
+    // own name, so window commands go in a menu after it.
+    cx.set_menus([
+      Menu::new("Quill").items([MenuItem::action("Quit Quill", Quit)]),
+      Menu::new("File").items([MenuItem::action("New Window", NewWindow)]),
+    ]);
 
     cx.on_action({
       let open_main_window = open_main_window.clone();
