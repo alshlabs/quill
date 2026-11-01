@@ -8,7 +8,8 @@ APP_NAME="Quill"
 BIN_NAME="quill"
 ARCH="$(uname -m)"
 TARGET="${TARGET:-}"
-ICON="${ICON:-$ROOT/resources/icon.svg}"
+# appimagetool rejects SVG as the .DirIcon source; it needs a PNG or XPM in the AppDir root.
+ICON="${ICON:-$ROOT/resources/icon.png}"
 ICON_EXT="${ICON##*.}"
 
 if [ -n "$TARGET" ]; then
