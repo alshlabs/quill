@@ -22,7 +22,7 @@ use crate::theme::colors::COLOR_FOREGROUND;
 use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
 use crate::theme::colors::COLOR_WINDOW_INACTIVE_BACKGROUND;
 
-pub const TITLE_BAR_HEIGHT: f32 = 42.;
+pub const TITLE_BAR_HEIGHT: f32 = 35.;
 const BRAND_COLOR: u32 = COLOR_ACTIVITY_BAR_FOREGROUND;
 const BRAND_INSET: f32 = 16.;
 const BRAND_ICON_SIZE: f32 = 14.;
