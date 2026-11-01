@@ -18,6 +18,7 @@ use crate::components::AppChatBubbleUser;
 use crate::components::AppMarkdown;
 use crate::icons::ICON_ARROW_UP;
 use crate::icons::ICON_SPARKLE;
+use crate::icons::ICON_TOOLS;
 use crate::services::AppServices;
 use crate::services::conversations::Conversation;
 use crate::services::conversations::ConversationCommand;
@@ -27,6 +28,7 @@ use crate::services::conversations::ConversationSnapshot;
 use crate::services::conversations::ConversationStatus;
 use crate::services::conversations::ConversationUpdate;
 use crate::services::conversations::MessageRole;
+use crate::services::conversations::ToolStatus;
 use crate::theme;
 
 #[allow(dead_code)]
@@ -125,7 +127,8 @@ impl PanelChat {
       ConversationUpdate::History(_)
       | ConversationUpdate::Message(_)
       | ConversationUpdate::ThinkingDelta { .. }
-      | ConversationUpdate::TextDelta { .. } => self.scroll_handle.scroll_to_bottom(),
+      | ConversationUpdate::TextDelta { .. }
+      | ConversationUpdate::ToolCall { .. } => self.scroll_handle.scroll_to_bottom(),
       _ => {}
     }
     cx.notify();
@@ -133,11 +136,12 @@ impl PanelChat {
 
   fn awaiting_reply(&self) -> bool {
     self.state.status == ConversationStatus::Responding
-      && self
-        .state
-        .messages
-        .last()
-        .is_some_and(|message| message.role == MessageRole::User)
+      && self.state.messages.last().is_some_and(|message| {
+        matches!(
+          message.role,
+          MessageRole::User | MessageRole::Tool(ToolStatus::Succeeded | ToolStatus::Failed)
+        )
+      })
   }
 
   fn submit(
@@ -309,6 +313,22 @@ fn chat_message((ix, message): (usize, &ConversationMessage)) -> AnyElement {
       .font_weight(FontWeight::LIGHT)
       .text_color(rgb(theme::colors::COLOR_GREY_700))
       .child(message.text.clone())
+      .into_any_element(),
+    MessageRole::Tool(status) => h_flex()
+      .id(id)
+      .items_center()
+      .gap(px(6.0))
+      .text_xs()
+      .text_color(rgb(match status {
+        ToolStatus::Failed => theme::colors::COLOR_ERROR_FOREGROUND,
+        _ => theme::colors::COLOR_DESCRIPTION_FOREGROUND,
+      }))
+      .child(Icon::empty().data(ICON_TOOLS).h(px(12.0)).w(px(12.0)))
+      .child(match status {
+        ToolStatus::Running => format!("Running {}", message.text),
+        ToolStatus::Succeeded => format!("Ran {}", message.text),
+        ToolStatus::Failed => format!("{} failed", message.text),
+      })
       .into_any_element(),
     MessageRole::Error => div()
       .id(id)

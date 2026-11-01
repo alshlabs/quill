@@ -22,6 +22,7 @@ pub use self::conversation::ConversationSnapshot;
 pub use self::conversation::ConversationStatus;
 pub use self::conversation::ConversationUpdate;
 pub use self::conversation::MessageRole;
+pub use self::conversation::ToolStatus;
 use crate::services::config::ConfigService;
 use crate::services::workspace::Workspace;
 

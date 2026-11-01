@@ -37,7 +37,15 @@ pub enum MessageRole {
   User,
   Agent,
   Thinking,
+  Tool(ToolStatus),
   Error,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ToolStatus {
+  Running,
+  Succeeded,
+  Failed,
 }
 
 #[derive(Clone)]
@@ -110,6 +118,22 @@ impl ConversationSnapshot {
       ConversationUpdate::TextDelta { message_id, delta } => {
         self.push_delta(MessageRole::Agent, message_id, delta)
       }
+      ConversationUpdate::ToolCall { id, name } => self.messages.push(ConversationMessage {
+        role: MessageRole::Tool(ToolStatus::Running),
+        message_id: Some(id.clone()),
+        text: name.clone(),
+      }),
+      ConversationUpdate::ToolResult { id, failed } => {
+        let call = self.messages.iter_mut().rev().find(|message| {
+          matches!(message.role, MessageRole::Tool(_)) && message.message_id.as_ref() == Some(id)
+        });
+        if let Some(call) = call {
+          call.role = MessageRole::Tool(match failed {
+            true => ToolStatus::Failed,
+            false => ToolStatus::Succeeded,
+          });
+        }
+      }
       ConversationUpdate::Deleted => self.deleted = true,
     }
   }
@@ -151,6 +175,15 @@ pub enum ConversationUpdate {
   TextDelta {
     message_id: Option<String>,
     delta: String,
+  },
+  /// The tool call's message carries the tool's name and its call id.
+  ToolCall {
+    id: String,
+    name: String,
+  },
+  ToolResult {
+    id: String,
+    failed: bool,
   },
   Deleted,
 }
@@ -314,6 +347,12 @@ impl Conversation {
             }
             AgentEvent::Text { message_id, delta } => {
               self.apply(ConversationUpdate::TextDelta { message_id, delta })
+            }
+            AgentEvent::ToolCall { id, name } => {
+              self.apply(ConversationUpdate::ToolCall { id, name })
+            }
+            AgentEvent::ToolResult { id, failed } => {
+              self.apply(ConversationUpdate::ToolResult { id, failed })
             }
             AgentEvent::Error(error) => self.apply(ConversationUpdate::Message(
               ConversationMessage::error(error),

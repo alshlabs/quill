@@ -19,6 +19,7 @@ pub const ICON_COMMAND          : &[u8] = include_bytes!("./bootstrap-icons-1.13
 // pub const ICON_THREE_BARS       : &[u8] = include_bytes!("./vscode/three-bars.svg");
 // pub const ICON_CODE             : &[u8] = include_bytes!("./vscode/code.svg");
 pub const ICON_SPARKLE          : &[u8] = include_bytes!("./vscode/sparkle.svg");
+pub const ICON_TOOLS            : &[u8] = include_bytes!("./vscode/tools.svg");
 // pub const ICON_SETTINGS         : &[u8] = include_bytes!("./vscode/settings.svg");
 // pub const ICON_MIC              : &[u8] = include_bytes!("./vscode/mic.svg");
 pub const ICON_ARROW_UP         : &[u8] = include_bytes!("./vscode/arrow-up.svg");

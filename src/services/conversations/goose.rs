@@ -251,6 +251,14 @@ pub enum AgentEvent {
     message_id: Option<String>,
     delta: String,
   },
+  ToolCall {
+    id: String,
+    name: String,
+  },
+  ToolResult {
+    id: String,
+    failed: bool,
+  },
   Error(String),
 }
 
@@ -549,17 +557,40 @@ async fn respond(
           .map(|content| content.thinking.as_str())
           .collect();
         let text = message.as_concat_text();
+        let tool_calls = message.content.iter().filter_map(|content| {
+          let request = content.as_tool_request()?;
+          let call = request.tool_call.as_ref().ok()?;
+          Some(AgentEvent::ToolCall {
+            id: request.id.clone(),
+            name: call.name.to_string(),
+          })
+        });
+        let tool_results = message.content.iter().filter_map(|content| {
+          let response = content.as_tool_response()?;
+          Some(AgentEvent::ToolResult {
+            id: response.id.clone(),
+            failed: response
+              .tool_result
+              .as_ref()
+              .map_or(true, |result| result.is_error == Some(true)),
+          })
+        });
         let events = [
           (!thinking.is_empty()).then(|| AgentEvent::Thinking {
             message_id: message.id.clone(),
             delta: thinking,
           }),
-          (!text.is_empty()).then_some(AgentEvent::Text {
-            message_id: message.id,
+          (!text.is_empty()).then(|| AgentEvent::Text {
+            message_id: message.id.clone(),
             delta: text,
           }),
         ];
-        for event in events.into_iter().flatten() {
+        let events = events
+          .into_iter()
+          .flatten()
+          .chain(tool_calls)
+          .chain(tool_results);
+        for event in events {
           if prompt.tx.send(event).is_err() {
             return;
           }
