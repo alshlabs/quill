@@ -379,7 +379,7 @@ fn status_bar() -> Div {
             .truncate()
             .text_xs()
             .text_color(rgb(theme::colors::COLOR_TAB_INACTIVE_FOREGROUND))
-            .child("No workspace"),
+            .child("Global workspace"),
         ),
     )
     .child(

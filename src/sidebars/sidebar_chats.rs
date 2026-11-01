@@ -123,7 +123,7 @@ fn header() -> Div {
     .text_size(px(11.0))
     .font_weight(FontWeight::BOLD)
     .text_color(rgb(theme::colors::COLOR_SIDEBAR_FOREGROUND))
-    .child(div().min_w_0().truncate().child("No workspace"))
+    .child(div().min_w_0().truncate().child("Global workspace"))
     .child(header_new_chat())
 }
 
