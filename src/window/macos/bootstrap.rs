@@ -63,12 +63,7 @@ pub fn bootstrap<V, F, Fut>(
           root_focus: cx.focus_handle().tab_stop(false),
           root: root_component(window, cx),
         });
-        cx.new(|cx| {
-          Root::new(view, window, cx)
-            .bordered(false)
-            // .bg(rgba(0x00000000))
-            .bg(rgba(theme::colors::COLOR_BACKGROUND_500))
-        })
+        cx.new(|cx| Root::new(view, window, cx).bg(rgba(theme::colors::COLOR_BACKGROUND_500)))
       })
       .expect("failed to open window");
     })

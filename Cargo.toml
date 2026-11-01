@@ -9,7 +9,7 @@ anyhow = "1.0.104"
 dunce = "1.0.5"
 futures = "0.3"
 home = "0.5.12"
-gpui-kit = { version = "0.6.6", features = ["tree-sitter-yaml"] }
+gpui-kit = { version = "0.8.1", features = ["tree-sitter-yaml"] }
 rmcp = { version = "3.8.0", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"

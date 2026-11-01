@@ -57,11 +57,7 @@ pub fn bootstrap<V, F, Fut>(
           root: root_component(window, cx),
         });
 
-        cx.new(|cx| {
-          Root::new(view, window, cx)
-            .bordered(false)
-            .bg(rgba(0x00000000))
-        })
+        cx.new(|cx| Root::new(view, window, cx).bg(rgba(0x00000000)))
       })
       .expect("failed to open window");
     })

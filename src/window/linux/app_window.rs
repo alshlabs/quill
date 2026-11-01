@@ -1,8 +1,9 @@
 //! Linux (and other non-macOS, non-Windows) window shell.
 //!
-//! This path draws its own client-side decorations, rounded frame, drop shadow
-//! and resize hit zones, while still tolerating server-side decorations from the
-//! window manager.
+//! The component library's window border draws the client-side frame, drop
+//! shadow and resize hit zones; this shell paints the rounded, bordered content
+//! inside it and still tolerates server-side decorations from the window
+//! manager.
 
 use gpui_kit::component::Icon;
 use gpui_kit::component::InteractiveElementExt as _;
@@ -55,7 +56,7 @@ impl<V: Render + 'static> Render for AppRoot<V> {
       COLOR_WINDOW_INACTIVE_BACKGROUND
     });
 
-    let body = div()
+    div()
       .flex()
       .flex_col()
       .size_full()
@@ -76,11 +77,7 @@ impl<V: Render + 'static> Render for AppRoot<V> {
       .when(chrome.border_bottom, |this| this.border_b(px(1.)))
       .when(chrome.border_left, |this| this.border_l(px(1.)))
       .child(deferred(self.title_bar(window, cx)))
-      .child(self.root.clone());
-
-    window_decoration::window_frame()
-      .radius(px(WINDOW_RADIUS))
-      .child(body)
+      .child(self.root.clone())
   }
 }
 
