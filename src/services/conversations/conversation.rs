@@ -36,6 +36,7 @@ pub enum ConversationStatus {
 pub enum MessageRole {
   User,
   Agent,
+  Thinking,
   Error,
 }
 
@@ -103,17 +104,31 @@ impl ConversationSnapshot {
       ConversationUpdate::Status(status) => self.status = *status,
       ConversationUpdate::History(messages) => self.messages = messages.clone(),
       ConversationUpdate::Message(message) => self.messages.push(message.clone()),
-      ConversationUpdate::TextDelta { message_id, delta } => match self.messages.last_mut() {
-        Some(last) if last.role == MessageRole::Agent && last.message_id == *message_id => {
-          last.text.push_str(delta)
-        }
-        _ => self.messages.push(ConversationMessage {
-          role: MessageRole::Agent,
-          message_id: message_id.clone(),
-          text: delta.clone(),
-        }),
-      },
+      ConversationUpdate::ThinkingDelta { message_id, delta } => {
+        self.push_delta(MessageRole::Thinking, message_id, delta)
+      }
+      ConversationUpdate::TextDelta { message_id, delta } => {
+        self.push_delta(MessageRole::Agent, message_id, delta)
+      }
       ConversationUpdate::Deleted => self.deleted = true,
+    }
+  }
+
+  fn push_delta(
+    &mut self,
+    role: MessageRole,
+    message_id: &Option<String>,
+    delta: &str,
+  ) {
+    match self.messages.last_mut() {
+      Some(last) if last.role == role && last.message_id == *message_id => {
+        last.text.push_str(delta)
+      }
+      _ => self.messages.push(ConversationMessage {
+        role,
+        message_id: message_id.clone(),
+        text: delta.to_string(),
+      }),
     }
   }
 }
@@ -127,6 +142,11 @@ pub enum ConversationUpdate {
   /// Replaces the messages; only sent while loading, before any prompt.
   History(Vec<ConversationMessage>),
   Message(ConversationMessage),
+  /// Extends the last message when it is the same thinking message.
+  ThinkingDelta {
+    message_id: Option<String>,
+    delta: String,
+  },
   /// Extends the last message when it is the same agent message.
   TextDelta {
     message_id: Option<String>,
@@ -289,6 +309,9 @@ impl Conversation {
         while let Some(event) = events.recv().await {
           match event {
             AgentEvent::Session { id } => self.save(ConversationId(id)),
+            AgentEvent::Thinking { message_id, delta } => {
+              self.apply(ConversationUpdate::ThinkingDelta { message_id, delta })
+            }
             AgentEvent::Text { message_id, delta } => {
               self.apply(ConversationUpdate::TextDelta { message_id, delta })
             }

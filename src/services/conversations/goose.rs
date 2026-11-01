@@ -243,6 +243,10 @@ pub enum AgentEvent {
   Session {
     id: String,
   },
+  Thinking {
+    message_id: Option<String>,
+    delta: String,
+  },
   Text {
     message_id: Option<String>,
     delta: String,
@@ -538,16 +542,27 @@ async fn respond(
   while let Some(event) = stream.next().await {
     match event {
       Ok(GooseEvent::Message(message)) => {
-        let delta = message.as_concat_text();
-        if delta.is_empty() {
-          continue;
-        }
-        let event = AgentEvent::Text {
-          message_id: message.id,
-          delta,
-        };
-        if prompt.tx.send(event).is_err() {
-          return;
+        let thinking: String = message
+          .content
+          .iter()
+          .filter_map(|content| content.as_thinking())
+          .map(|content| content.thinking.as_str())
+          .collect();
+        let text = message.as_concat_text();
+        let events = [
+          (!thinking.is_empty()).then(|| AgentEvent::Thinking {
+            message_id: message.id.clone(),
+            delta: thinking,
+          }),
+          (!text.is_empty()).then_some(AgentEvent::Text {
+            message_id: message.id,
+            delta: text,
+          }),
+        ];
+        for event in events.into_iter().flatten() {
+          if prompt.tx.send(event).is_err() {
+            return;
+          }
         }
       }
       Ok(_) => {}

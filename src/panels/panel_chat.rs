@@ -124,10 +124,20 @@ impl PanelChat {
       ConversationUpdate::Deleted => cx.emit(ChatEvent::Deleted),
       ConversationUpdate::History(_)
       | ConversationUpdate::Message(_)
+      | ConversationUpdate::ThinkingDelta { .. }
       | ConversationUpdate::TextDelta { .. } => self.scroll_handle.scroll_to_bottom(),
       _ => {}
     }
     cx.notify();
+  }
+
+  fn awaiting_reply(&self) -> bool {
+    self.state.status == ConversationStatus::Responding
+      && self
+        .state
+        .messages
+        .last()
+        .is_some_and(|message| message.role == MessageRole::User)
   }
 
   fn submit(
@@ -257,7 +267,10 @@ impl Render for PanelChat {
               .pt(px(16.0))
               .pb(MESSAGES_BOTTOM_PADDING)
               .gap(px(16.0))
-              .children(self.state.messages.iter().enumerate().map(chat_message)),
+              .children(self.state.messages.iter().enumerate().map(chat_message))
+              .when(self.awaiting_reply(), |this| {
+                this.child(thinking_indicator())
+              }),
           ),
       )
       .child(
@@ -290,6 +303,13 @@ fn chat_message((ix, message): (usize, &ConversationMessage)) -> AnyElement {
     MessageRole::Agent => AppMarkdown::new(id, message.text.clone())
       .text_sm()
       .into_any_element(),
+    MessageRole::Thinking => div()
+      .id(id)
+      .text_xs()
+      .font_weight(FontWeight::LIGHT)
+      .text_color(rgb(theme::colors::COLOR_GREY_700))
+      .child(message.text.clone())
+      .into_any_element(),
     MessageRole::Error => div()
       .id(id)
       .text_sm()
@@ -297,6 +317,13 @@ fn chat_message((ix, message): (usize, &ConversationMessage)) -> AnyElement {
       .child(message.text.clone())
       .into_any_element(),
   }
+}
+
+fn thinking_indicator() -> Div {
+  div()
+    .text_sm()
+    .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND))
+    .child("Thinking...")
 }
 
 fn chat_entry(
