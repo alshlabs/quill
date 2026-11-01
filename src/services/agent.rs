@@ -192,6 +192,19 @@ pub fn clone_chat(session_id: String) -> impl Future<Output = Result<()>> {
   })
 }
 
+pub fn rename_chat(
+  session_id: String,
+  name: String,
+) -> impl Future<Output = Result<()>> {
+  spawn(async move {
+    SessionManager::instance()
+      .update(&session_id)
+      .user_provided_name(name)
+      .apply()
+      .await
+  })
+}
+
 fn last_active(session: &Session) -> SystemTime {
   session.last_message_at.unwrap_or(session.updated_at).into()
 }

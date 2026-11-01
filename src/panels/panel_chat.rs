@@ -192,7 +192,7 @@ impl PanelChat {
     cx.notify();
   }
 
-  fn set_title(
+  pub fn set_title(
     &mut self,
     title: String,
     cx: &mut Context<Self>,

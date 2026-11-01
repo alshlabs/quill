@@ -3,8 +3,13 @@ use std::time::SystemTime;
 use gpui_kit::base::h_flex;
 use gpui_kit::base::v_flex;
 use gpui_kit::component::Icon;
+use gpui_kit::component::Sizable as _;
+use gpui_kit::component::input::Input;
+use gpui_kit::component::input::InputEvent;
+use gpui_kit::component::input::InputState;
 use gpui_kit::component::menu::ContextMenuExt as _;
 use gpui_kit::component::menu::PopupMenuItem;
+use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
 use crate::app::NewChat;
@@ -17,9 +22,21 @@ pub struct OpenChat(pub String);
 
 pub struct ChatDeleted(pub String);
 
+pub struct ChatRenamed {
+  pub session_id: String,
+  pub name: String,
+}
+
+struct Rename {
+  session_id: String,
+  input: Entity<InputState>,
+  _subscription: Subscription,
+}
+
 pub struct SidebarChats {
   chats: Vec<ChatSummary>,
   error: Option<SharedString>,
+  renaming: Option<Rename>,
   _refresh: Option<Task<()>>,
 }
 
@@ -27,11 +44,14 @@ impl EventEmitter<OpenChat> for SidebarChats {}
 
 impl EventEmitter<ChatDeleted> for SidebarChats {}
 
+impl EventEmitter<ChatRenamed> for SidebarChats {}
+
 impl SidebarChats {
   pub fn new(cx: &mut Context<Self>) -> Self {
     let mut this = Self {
       chats: Vec::new(),
       error: None,
+      renaming: None,
       _refresh: None,
     };
     this.refresh(cx);
@@ -58,9 +78,79 @@ impl SidebarChats {
     }));
   }
 
+  fn start_rename(
+    &mut self,
+    session_id: String,
+    window: &mut Window,
+    cx: &mut Context<Self>,
+  ) {
+    let Some(chat) = self.chats.iter().find(|chat| chat.id == session_id) else {
+      return;
+    };
+
+    let name = chat.name.clone();
+    let input = cx.new(|cx| InputState::new(window, cx).default_value(name));
+    let subscription = cx.subscribe_in(&input, window, |this, _, event: &InputEvent, _, cx| {
+      if let InputEvent::PressEnter { .. } | InputEvent::Blur = event {
+        this.finish_rename(true, cx);
+      }
+    });
+    // Focusing before the menu dismisses keeps it from restoring focus to the
+    // row, which would blur the input and commit the rename immediately.
+    input.update(cx, |input, cx| {
+      input.focus(window, cx);
+      input.select_all(window, cx);
+    });
+
+    self.renaming = Some(Rename {
+      session_id,
+      input,
+      _subscription: subscription,
+    });
+    cx.notify();
+  }
+
+  fn finish_rename(
+    &mut self,
+    commit: bool,
+    cx: &mut Context<Self>,
+  ) {
+    let Some(rename) = self.renaming.take() else {
+      return;
+    };
+    cx.notify();
+
+    let name = rename.input.read(cx).value().trim().to_string();
+    let Some(chat) = self
+      .chats
+      .iter_mut()
+      .find(|chat| chat.id == rename.session_id)
+    else {
+      return;
+    };
+    if !commit || name.is_empty() || chat.name == name {
+      return;
+    }
+    chat.name = name.clone();
+
+    let session_id = rename.session_id;
+    let save = agent::rename_chat(session_id.clone(), name.clone());
+    cx.spawn(async move |this, cx| {
+      let result = save.await;
+      let _ = this.update(cx, |this, cx| {
+        if result.is_ok() {
+          cx.emit(ChatRenamed { session_id, name });
+        }
+        this.finish_change(result, cx);
+      });
+    })
+    .detach();
+  }
+
   fn delete_chat(
     &mut self,
     session_id: String,
+    _window: &mut Window,
     cx: &mut Context<Self>,
   ) {
     let delete = agent::delete_chat(session_id.clone());
@@ -79,6 +169,7 @@ impl SidebarChats {
   fn clone_chat(
     &mut self,
     session_id: String,
+    _window: &mut Window,
     cx: &mut Context<Self>,
   ) {
     let clone = agent::clone_chat(session_id);
@@ -128,36 +219,48 @@ impl Render for SidebarChats {
       }))
       .children(self.chats.iter().enumerate().map(|(ix, chat)| {
         let id = chat.id.clone();
+        let rename = self
+          .renaming
+          .as_ref()
+          .filter(|rename| rename.session_id == chat.id);
         h_flex()
           .id(("sidebar-chat", ix))
           .gap(px(2.0))
-          .px(px(8.0))
-          .py(px(2.0))
           .rounded(px(6.0))
-          .cursor_pointer()
           .text_size(px(13.0))
           .text_color(rgb(theme::colors::COLOR_SIDEBAR_FOREGROUND))
-          .hover(|this| {
-            this
-              .bg(rgb(theme::colors::COLOR_LIST_HOVER_BACKGROUND))
-              .text_color(rgb(theme::colors::COLOR_WHITE))
+          .map(|this| match rename {
+            Some(rename) => this
+              .px(px(4.0))
+              .py(px(1.0))
+              .child(rename_input(&rename.input, cx)),
+            None => this
+              .px(px(8.0))
+              .py(px(2.0))
+              .cursor_pointer()
+              .hover(|this| {
+                this
+                  .bg(rgb(theme::colors::COLOR_LIST_HOVER_BACKGROUND))
+                  .text_color(rgb(theme::colors::COLOR_WHITE))
+              })
+              .on_click(cx.listener(move |_, _: &ClickEvent, _, cx| {
+                cx.emit(OpenChat(id.clone()));
+              }))
+              .child(div().flex_1().min_w_0().truncate().child(chat.name.clone()))
+              .child(
+                div()
+                  .flex_shrink_0()
+                  .text_xs()
+                  .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND))
+                  .child(relative_time(now, chat.updated_at)),
+              ),
           })
-          .on_click(cx.listener(move |_, _: &ClickEvent, _, cx| {
-            cx.emit(OpenChat(id.clone()));
-          }))
-          .child(div().flex_1().min_w_0().truncate().child(chat.name.clone()))
-          .child(
-            div()
-              .flex_shrink_0()
-              .text_xs()
-              .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND))
-              .child(relative_time(now, chat.updated_at)),
-          )
           .context_menu({
             let this = this.clone();
             let id = chat.id.clone();
             move |menu, _, _| {
               menu
+                .item(chat_menu_item("Rename", &this, &id, Self::start_rename))
                 .item(chat_menu_item("Clone", &this, &id, Self::clone_chat))
                 .item(chat_menu_item("Delete", &this, &id, Self::delete_chat))
             }
@@ -177,13 +280,42 @@ fn chat_menu_item(
   label: &'static str,
   this: &WeakEntity<SidebarChats>,
   session_id: &str,
-  action: fn(&mut SidebarChats, String, &mut Context<SidebarChats>),
+  action: fn(&mut SidebarChats, String, &mut Window, &mut Context<SidebarChats>),
 ) -> PopupMenuItem {
   let this = this.clone();
   let session_id = session_id.to_string();
-  PopupMenuItem::new(label).on_click(move |_, _, cx| {
-    let _ = this.update(cx, |this, cx| action(this, session_id.clone(), cx));
+  PopupMenuItem::new(label).on_click(move |_, window, cx| {
+    let _ = this.update(cx, |this, cx| action(this, session_id.clone(), window, cx));
   })
+}
+
+fn rename_input(
+  input: &Entity<InputState>,
+  cx: &mut Context<SidebarChats>,
+) -> Div {
+  div()
+    .flex_1()
+    .min_w_0()
+    .rounded(px(2.0))
+    .border_1()
+    .border_color(rgb(theme::colors::COLOR_FOCUS_BORDER))
+    .bg(rgb(theme::colors::COLOR_INPUT_BACKGROUND))
+    // The input consumes Escape itself without emitting an event.
+    .capture_key_down(cx.listener(|this, event: &KeyDownEvent, _, cx| {
+      if event.keystroke.key == "escape" {
+        cx.stop_propagation();
+        this.finish_rename(false, cx);
+      }
+    }))
+    .child(
+      Input::new(input)
+        .appearance(false)
+        .xsmall()
+        .px(px(3.0))
+        .py_0()
+        .text_size(px(13.0))
+        .text_color(rgb(theme::colors::COLOR_FOREGROUND)),
+    )
 }
 
 fn header() -> Div {

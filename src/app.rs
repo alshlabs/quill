@@ -21,6 +21,7 @@ use crate::panels::panel_settings::DirtyChanged;
 use crate::panels::panel_settings::PanelSettings;
 use crate::services::updates;
 use crate::sidebars::sidebar_chats::ChatDeleted;
+use crate::sidebars::sidebar_chats::ChatRenamed;
 use crate::sidebars::sidebar_chats::OpenChat;
 use crate::sidebars::sidebar_chats::SidebarChats;
 use crate::sidebars::sidebar_plugins::SidebarPlugins;
@@ -109,6 +110,11 @@ impl AppRoot {
       cx.subscribe(&sidebar_chats, |this, _, event: &ChatDeleted, cx| {
         this.close_chat(&event.0, cx)
       }),
+      cx.subscribe(&sidebar_chats, |this, _, event: &ChatRenamed, cx| {
+        if let Some((_, chat)) = this.chat_tab(&event.session_id, cx) {
+          chat.update(cx, |chat, cx| chat.set_title(event.name.clone(), cx));
+        }
+      }),
     ];
 
     let mut this = Self {
@@ -190,7 +196,7 @@ impl AppRoot {
     window: &mut Window,
     cx: &mut Context<Self>,
   ) {
-    if let Some(id) = self.chat_tab(&session_id, cx) {
+    if let Some((id, _)) = self.chat_tab(&session_id, cx) {
       self.tabs.update(cx, |tabs, cx| tabs.activate(id, cx));
       return;
     }
@@ -204,7 +210,7 @@ impl AppRoot {
     session_id: &str,
     cx: &mut Context<Self>,
   ) {
-    if let Some(id) = self.chat_tab(session_id, cx) {
+    if let Some((id, _)) = self.chat_tab(session_id, cx) {
       self.tabs.update(cx, |tabs, cx| tabs.close(id, cx));
     }
   }
@@ -213,14 +219,16 @@ impl AppRoot {
     &self,
     session_id: &str,
     cx: &App,
-  ) -> Option<TabId> {
+  ) -> Option<(TabId, Entity<PanelChat>)> {
     self
       .tabs
       .read(cx)
       .items()
       .iter()
       .find_map(|tab| match &tab.kind {
-        TabKind::Chat(chat) => (chat.read(cx).session_id() == Some(session_id)).then_some(tab.id),
+        TabKind::Chat(chat) => {
+          (chat.read(cx).session_id() == Some(session_id)).then(|| (tab.id, chat.clone()))
+        }
         TabKind::Settings(_) => None,
       })
   }
