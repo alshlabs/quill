@@ -8,9 +8,7 @@ license-file = "LICENSE.md"
 anyhow = "1.0.104"
 dunce = "1.0.5"
 futures = "0.3"
-goose = { git = "https://github.com/aaif-goose/goose", rev = "591edd47cf2cfea4957d720c607cf2a4def8673d", features = ["rustls-tls"] }
 home = "0.5.12"
-goose-mcp = { git = "https://github.com/aaif-goose/goose", rev = "591edd47cf2cfea4957d720c607cf2a4def8673d", default-features = false, features = ["bundled-mcp"] }
 gpui-kit = { version = "0.6.6", features = ["tree-sitter-yaml"] }
 rmcp = { version = "3.8.0", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
@@ -29,6 +27,10 @@ self_update = { version = "1.3.3", default-features = false, features = [
   "checksums",
 ] }
 semver = "1.0.28"
+
+#
+goose = { git = "https://github.com/aaif-goose/goose", rev = "591edd47cf2cfea4957d720c607cf2a4def8673d", features = ["rustls-tls"] }
+goose-mcp = { git = "https://github.com/aaif-goose/goose", rev = "591edd47cf2cfea4957d720c607cf2a4def8673d", default-features = false, features = ["bundled-mcp"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 raw-window-handle = "0.6"
