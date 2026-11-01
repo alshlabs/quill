@@ -16,6 +16,8 @@ use gpui_kit::*;
 
 use crate::services::AppServices;
 use crate::services::config::Config;
+use crate::services::config::ConfigService;
+use crate::services::conversations::Conversations;
 
 fn main() -> anyhow::Result<()> {
   let config_path = match std::env::var("QUILL_CONFIG") {
@@ -30,9 +32,10 @@ fn main() -> anyhow::Result<()> {
 
   dbg!(&config);
 
-  services::agent::init()?;
+  let config = ConfigService::new(config);
+  let conversations = Conversations::new(config.clone())?;
 
-  AppServices::new(config_path, config).register_global()?;
+  AppServices::new(config_path, config, conversations).register_global()?;
 
   window::bootstrap(
     //

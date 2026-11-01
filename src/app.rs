@@ -19,9 +19,10 @@ use crate::panels::panel_chat::ChatEvent;
 use crate::panels::panel_chat::PanelChat;
 use crate::panels::panel_settings::DirtyChanged;
 use crate::panels::panel_settings::PanelSettings;
+use crate::services::AppServices;
+use crate::services::conversations::Conversation;
+use crate::services::conversations::ConversationId;
 use crate::services::updates;
-use crate::sidebars::sidebar_chats::ChatDeleted;
-use crate::sidebars::sidebar_chats::ChatRenamed;
 use crate::sidebars::sidebar_chats::OpenChat;
 use crate::sidebars::sidebar_chats::SidebarChats;
 use crate::sidebars::sidebar_plugins::SidebarPlugins;
@@ -155,16 +156,8 @@ impl AppRoot {
       cx.subscribe_in(
         &sidebar_chats,
         window,
-        |this, _, event: &OpenChat, window, cx| this.open_chat(event.0.clone(), window, cx),
+        |this, _, event: &OpenChat, window, cx| this.open_chat(&event.0, window, cx),
       ),
-      cx.subscribe(&sidebar_chats, |this, _, event: &ChatDeleted, cx| {
-        this.close_chat(&event.0, cx)
-      }),
-      cx.subscribe(&sidebar_chats, |this, _, event: &ChatRenamed, cx| {
-        if let Some((_, chat)) = this.chat_tab(&event.session_id, cx) {
-          chat.update(cx, |chat, cx| chat.set_title(event.name.clone(), cx));
-        }
-      }),
     ];
 
     Self {
@@ -177,15 +170,14 @@ impl AppRoot {
 
   fn add_chat(
     &mut self,
+    conversation: Conversation,
     window: &mut Window,
     cx: &mut Context<Self>,
   ) -> Entity<PanelChat> {
-    let chat = cx.new(|cx| PanelChat::new("New Chat", window, cx));
-    cx.subscribe(&chat, |this, _, _: &ChatEvent, cx| {
-      this
-        .sidebar_chats
-        .update(cx, |sidebar, cx| sidebar.refresh(cx));
-      cx.notify();
+    let chat = cx.new(|cx| PanelChat::new(conversation, window, cx));
+    cx.subscribe(&chat, |this, chat, event: &ChatEvent, cx| match event {
+      ChatEvent::TitleChanged => cx.notify(),
+      ChatEvent::Deleted => this.close_chat(&chat, cx),
     })
     .detach();
     self.tabs.update(cx, |tabs, cx| {
@@ -198,43 +190,41 @@ impl AppRoot {
   /// new tab.
   fn open_chat(
     &mut self,
-    session_id: String,
+    id: &ConversationId,
     window: &mut Window,
     cx: &mut Context<Self>,
   ) {
-    if let Some((id, _)) = self.chat_tab(&session_id, cx) {
-      self.tabs.update(cx, |tabs, cx| tabs.activate(id, cx));
+    if let Some(tab) = self.chat_tab(|chat, cx| chat.read(cx).conversation_id() == Some(id), cx) {
+      self.tabs.update(cx, |tabs, cx| tabs.activate(tab, cx));
       return;
     }
 
-    let chat = self.add_chat(window, cx);
-    chat.update(cx, |chat, cx| chat.load_session(session_id, cx));
+    let conversation = AppServices::obtain().conversations().open(id);
+    self.add_chat(conversation, window, cx);
   }
 
   fn close_chat(
     &mut self,
-    session_id: &str,
+    chat: &Entity<PanelChat>,
     cx: &mut Context<Self>,
   ) {
-    if let Some((id, _)) = self.chat_tab(session_id, cx) {
-      self.tabs.update(cx, |tabs, cx| tabs.close(id, cx));
+    if let Some(tab) = self.chat_tab(|candidate, _| candidate == chat, cx) {
+      self.tabs.update(cx, |tabs, cx| tabs.close(tab, cx));
     }
   }
 
   fn chat_tab(
     &self,
-    session_id: &str,
+    matches: impl Fn(&Entity<PanelChat>, &App) -> bool,
     cx: &App,
-  ) -> Option<(TabId, Entity<PanelChat>)> {
+  ) -> Option<TabId> {
     self
       .tabs
       .read(cx)
       .items()
       .iter()
       .find_map(|tab| match &tab.kind {
-        TabKind::Chat(chat) => {
-          (chat.read(cx).session_id() == Some(session_id)).then(|| (tab.id, chat.clone()))
-        }
+        TabKind::Chat(chat) => matches(chat, cx).then_some(tab.id),
         TabKind::Settings(_) => None,
       })
   }
@@ -245,7 +235,8 @@ impl AppRoot {
     window: &mut Window,
     cx: &mut Context<Self>,
   ) {
-    let chat = self.add_chat(window, cx);
+    let conversation = AppServices::obtain().conversations().create();
+    let chat = self.add_chat(conversation, window, cx);
     chat.update(cx, |chat, cx| chat.focus_input(window, cx));
   }
 

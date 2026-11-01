@@ -1,3 +1,4 @@
+use std::future::Future;
 use std::time::SystemTime;
 
 use gpui_kit::base::h_flex;
@@ -14,77 +15,64 @@ use gpui_kit::*;
 
 use crate::app::NewChat;
 use crate::icons::ICON_NEW_FILE;
-use crate::services::agent;
-use crate::services::agent::ChatSummary;
+use crate::services::AppServices;
+use crate::services::conversations::ConversationId;
+use crate::services::conversations::ConversationSummary;
 use crate::theme;
 
-pub struct OpenChat(pub String);
-
-pub struct ChatDeleted(pub String);
-
-pub struct ChatRenamed {
-  pub session_id: String,
-  pub name: String,
-}
+pub struct OpenChat(pub ConversationId);
 
 struct Rename {
-  session_id: String,
+  id: ConversationId,
   input: Entity<InputState>,
   _subscription: Subscription,
 }
 
 pub struct SidebarChats {
-  chats: Vec<ChatSummary>,
+  chats: Vec<ConversationSummary>,
   error: Option<SharedString>,
   renaming: Option<Rename>,
-  _refresh: Option<Task<()>>,
+  _updates: Task<()>,
 }
 
 impl EventEmitter<OpenChat> for SidebarChats {}
 
-impl EventEmitter<ChatDeleted> for SidebarChats {}
-
-impl EventEmitter<ChatRenamed> for SidebarChats {}
-
 impl SidebarChats {
   pub fn new(cx: &mut Context<Self>) -> Self {
-    let mut this = Self {
+    let mut lists = AppServices::obtain().conversations().subscribe();
+    let updates = cx.spawn(async move |this, cx| {
+      while let Some(list) = lists.recv().await {
+        let updated = this.update(cx, |this, cx| {
+          match list {
+            Ok(chats) => {
+              this.chats = chats;
+              this.error = None;
+            }
+            Err(error) => this.error = Some(error.into()),
+          }
+          cx.notify();
+        });
+        if updated.is_err() {
+          return;
+        }
+      }
+    });
+
+    Self {
       chats: Vec::new(),
       error: None,
       renaming: None,
-      _refresh: None,
-    };
-    this.refresh(cx);
-    this
-  }
-
-  pub fn refresh(
-    &mut self,
-    cx: &mut Context<Self>,
-  ) {
-    let chats = agent::list_chats();
-    self._refresh = Some(cx.spawn(async move |this, cx| {
-      let chats = chats.await;
-      let _ = this.update(cx, |this, cx| {
-        match chats {
-          Ok(chats) => {
-            this.chats = chats;
-            this.error = None;
-          }
-          Err(error) => this.error = Some(format!("{error:#}").into()),
-        }
-        cx.notify();
-      });
-    }));
+      _updates: updates,
+    }
   }
 
   fn start_rename(
     &mut self,
-    session_id: String,
+    id: ConversationId,
     window: &mut Window,
     cx: &mut Context<Self>,
   ) {
-    let Some(chat) = self.chats.iter().find(|chat| chat.id == session_id) else {
+    let Some(chat) = self.chats.iter().find(|chat| chat.id == id) else {
       return;
     };
 
@@ -103,7 +91,7 @@ impl SidebarChats {
     });
 
     self.renaming = Some(Rename {
-      session_id,
+      id,
       input,
       _subscription: subscription,
     });
@@ -121,11 +109,7 @@ impl SidebarChats {
     cx.notify();
 
     let name = rename.input.read(cx).value().trim().to_string();
-    let Some(chat) = self
-      .chats
-      .iter_mut()
-      .find(|chat| chat.id == rename.session_id)
-    else {
+    let Some(chat) = self.chats.iter_mut().find(|chat| chat.id == rename.id) else {
       return;
     };
     if !commit || name.is_empty() || chat.name == name {
@@ -133,65 +117,49 @@ impl SidebarChats {
     }
     chat.name = name.clone();
 
-    let session_id = rename.session_id;
-    let save = agent::rename_chat(session_id.clone(), name.clone());
-    cx.spawn(async move |this, cx| {
-      let result = save.await;
-      let _ = this.update(cx, |this, cx| {
-        if result.is_ok() {
-          cx.emit(ChatRenamed { session_id, name });
-        }
-        this.finish_change(result, cx);
-      });
-    })
-    .detach();
+    let save = AppServices::obtain()
+      .conversations()
+      .rename(&rename.id, name);
+    self.report(save, cx);
   }
 
   fn delete_chat(
     &mut self,
-    session_id: String,
+    id: ConversationId,
     _window: &mut Window,
     cx: &mut Context<Self>,
   ) {
-    let delete = agent::delete_chat(session_id.clone());
-    cx.spawn(async move |this, cx| {
-      let result = delete.await;
-      let _ = this.update(cx, |this, cx| {
-        if result.is_ok() {
-          cx.emit(ChatDeleted(session_id));
-        }
-        this.finish_change(result, cx);
-      });
-    })
-    .detach();
+    let delete = AppServices::obtain().conversations().delete(&id);
+    self.report(delete, cx);
   }
 
   fn clone_chat(
     &mut self,
-    session_id: String,
+    id: ConversationId,
     _window: &mut Window,
     cx: &mut Context<Self>,
   ) {
-    let clone = agent::clone_chat(session_id);
-    cx.spawn(async move |this, cx| {
-      let result = clone.await;
-      let _ = this.update(cx, |this, cx| this.finish_change(result, cx));
-    })
-    .detach();
+    let duplicate = AppServices::obtain().conversations().duplicate(&id);
+    self.report(duplicate, cx);
   }
 
-  fn finish_change(
+  /// Successful changes come back through the list subscription; only failures
+  /// need showing here.
+  fn report(
     &mut self,
-    result: anyhow::Result<()>,
+    change: impl Future<Output = anyhow::Result<()>> + 'static,
     cx: &mut Context<Self>,
   ) {
-    match result {
-      Ok(()) => self.refresh(cx),
-      Err(error) => {
-        self.error = Some(format!("{error:#}").into());
+    cx.spawn(async move |this, cx| {
+      let Err(error) = change.await else {
+        return;
+      };
+      let _ = this.update(cx, |this, cx| {
+        this.error = Some(format!("{error:#}").into());
         cx.notify();
-      }
-    }
+      });
+    })
+    .detach();
   }
 }
 
@@ -219,10 +187,7 @@ impl Render for SidebarChats {
       }))
       .children(self.chats.iter().enumerate().map(|(ix, chat)| {
         let id = chat.id.clone();
-        let rename = self
-          .renaming
-          .as_ref()
-          .filter(|rename| rename.session_id == chat.id);
+        let rename = self.renaming.as_ref().filter(|rename| rename.id == chat.id);
         h_flex()
           .id(("sidebar-chat", ix))
           .gap(px(2.0))
@@ -279,13 +244,13 @@ impl Render for SidebarChats {
 fn chat_menu_item(
   label: &'static str,
   this: &WeakEntity<SidebarChats>,
-  session_id: &str,
-  action: fn(&mut SidebarChats, String, &mut Window, &mut Context<SidebarChats>),
+  id: &ConversationId,
+  action: fn(&mut SidebarChats, ConversationId, &mut Window, &mut Context<SidebarChats>),
 ) -> PopupMenuItem {
   let this = this.clone();
-  let session_id = session_id.to_string();
+  let id = id.clone();
   PopupMenuItem::new(label).on_click(move |_, window, cx| {
-    let _ = this.update(cx, |this, cx| action(this, session_id.clone(), window, cx));
+    let _ = this.update(cx, |this, cx| action(this, id.clone(), window, cx));
   })
 }
 

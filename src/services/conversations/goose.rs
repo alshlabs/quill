@@ -83,7 +83,7 @@ pub fn init() -> Result<()> {
     .map_err(|_| anyhow!("goose is already initialized"))
 }
 
-fn runtime() -> &'static Runtime {
+pub fn runtime() -> &'static Runtime {
   RUNTIME.get().expect("goose is not initialized")
 }
 

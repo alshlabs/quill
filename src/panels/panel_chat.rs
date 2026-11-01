@@ -1,6 +1,3 @@
-use std::sync::Arc;
-
-use anyhow::Context as _;
 use gpui_kit::base::h_flex;
 use gpui_kit::base::v_flex;
 use gpui_kit::component::Icon;
@@ -22,14 +19,14 @@ use crate::components::AppMarkdown;
 use crate::icons::ICON_ARROW_UP;
 use crate::icons::ICON_SPARKLE;
 use crate::services::AppServices;
-use crate::services::agent;
-use crate::services::agent::AgentEvent;
-use crate::services::agent::AgentHarness;
-use crate::services::agent::AgentHarnessOptions;
-use crate::services::agent::HistoryMessage;
-use crate::services::agent::HistoryRole;
-use crate::services::config::AgentConfig;
-use crate::services::config::Config;
+use crate::services::conversations::Conversation;
+use crate::services::conversations::ConversationCommand;
+use crate::services::conversations::ConversationId;
+use crate::services::conversations::ConversationMessage;
+use crate::services::conversations::ConversationSnapshot;
+use crate::services::conversations::ConversationStatus;
+use crate::services::conversations::ConversationUpdate;
+use crate::services::conversations::MessageRole;
 use crate::theme;
 
 #[allow(dead_code)]
@@ -42,51 +39,17 @@ const MODEL_MENU_MIN_WIDTH: Pixels = px(200.0);
 // scroll its last message clear of it.
 const MESSAGES_BOTTOM_PADDING: Pixels = px(150.0);
 
-#[derive(PartialEq)]
-enum ChatRole {
-  User,
-  Agent,
-  Error,
-}
-
-struct ChatMessage {
-  role: ChatRole,
-  message_id: Option<String>,
-  content: String,
-}
-
-impl From<HistoryMessage> for ChatMessage {
-  fn from(message: HistoryMessage) -> Self {
-    Self {
-      role: match message.role {
-        HistoryRole::User => ChatRole::User,
-        HistoryRole::Agent => ChatRole::Agent,
-      },
-      message_id: message.message_id,
-      content: message.text,
-    }
-  }
-}
-
 pub enum ChatEvent {
   TitleChanged,
-  /// The chat's session started or received a reply, so chat lists may be stale.
-  Updated,
+  Deleted,
 }
 
 pub struct PanelChat {
-  title: SharedString,
-  session_id: Option<String>,
+  conversation: Conversation,
+  state: ConversationSnapshot,
   input: Entity<TextareaState>,
-  agent: anyhow::Result<AgentHarness>,
-  agent_config: Arc<anyhow::Result<Config>>,
-  agent_model: Option<SharedString>,
-  model: Option<SharedString>,
-  messages: Vec<ChatMessage>,
   scroll_handle: ScrollHandle,
-  response: Option<Task<()>>,
-  _naming: Option<Task<()>>,
-  _history: Option<Task<()>>,
+  _updates: Task<()>,
   _subscriptions: Vec<Subscription>,
 }
 
@@ -94,7 +57,7 @@ impl EventEmitter<ChatEvent> for PanelChat {}
 
 impl PanelChat {
   pub fn new(
-    title: impl Into<SharedString>,
+    conversation: Conversation,
     window: &mut Window,
     cx: &mut Context<Self>,
   ) -> Self {
@@ -111,32 +74,38 @@ impl PanelChat {
       }
     });
 
-    let agent_config = AppServices::obtain().config();
-    let (agent, naming) = connect_agent(None, &agent_config, None, cx);
+    let (state, mut updates) = conversation.subscribe();
+    let updates = cx.spawn(async move |this, cx| {
+      while let Some(update) = updates.recv().await {
+        if this.update(cx, |this, cx| this.apply(update, cx)).is_err() {
+          return;
+        }
+      }
+    });
+
+    let scroll_handle = ScrollHandle::new();
+    scroll_handle.scroll_to_bottom();
 
     Self {
-      title: title.into(),
-      session_id: None,
+      conversation,
+      state,
       input,
-      agent,
-      agent_config,
-      agent_model: None,
-      model: None,
-      messages: Vec::new(),
-      scroll_handle: ScrollHandle::new(),
-      response: None,
-      _naming: naming,
-      _history: None,
+      scroll_handle,
+      _updates: updates,
       _subscriptions: vec![on_input],
     }
   }
 
   pub fn title(&self) -> SharedString {
-    self.title.clone()
+    self
+      .state
+      .title
+      .clone()
+      .map_or(SharedString::new_static("New Chat"), SharedString::from)
   }
 
-  pub fn session_id(&self) -> Option<&str> {
-    self.session_id.as_deref()
+  pub fn conversation_id(&self) -> Option<&ConversationId> {
+    self.state.id.as_ref()
   }
 
   pub fn focus_input(
@@ -147,62 +116,20 @@ impl PanelChat {
     self.input.update(cx, |input, cx| input.focus(window, cx));
   }
 
-  /// Replaces this chat with a stored session: its history is shown and new
-  /// prompts continue that session.
-  pub fn load_session(
+  fn apply(
     &mut self,
-    session_id: String,
+    update: ConversationUpdate,
     cx: &mut Context<Self>,
   ) {
-    if self.session_id.as_deref() == Some(session_id.as_str()) {
-      return;
+    self.state.apply(&update);
+    match update {
+      ConversationUpdate::Title(_) => cx.emit(ChatEvent::TitleChanged),
+      ConversationUpdate::Deleted => cx.emit(ChatEvent::Deleted),
+      ConversationUpdate::History(_)
+      | ConversationUpdate::Message(_)
+      | ConversationUpdate::TextDelta { .. } => self.scroll_handle.scroll_to_bottom(),
+      _ => {}
     }
-
-    self.response = None;
-    self.messages.clear();
-    self.session_id = Some(session_id.clone());
-    self.agent_config = AppServices::obtain().config();
-    (self.agent, self._naming) = connect_agent(
-      Some(session_id.clone()),
-      &self.agent_config,
-      self.model.as_deref(),
-      cx,
-    );
-    self.agent_model = self.model.clone();
-
-    let history = agent::load_history(session_id);
-    self._history = Some(cx.spawn(async move |this, cx| {
-      let history = history.await;
-      let _ = this.update(cx, |this, cx| {
-        match history {
-          // Prepended, so prompts sent while the history loaded stay after it.
-          Ok(history) => {
-            this
-              .messages
-              .splice(0..0, history.messages.into_iter().map(ChatMessage::from));
-            this.set_title(history.name, cx);
-          }
-          Err(error) => this.append(AgentEvent::Error(format!("{error:#}")), cx),
-        }
-        this.scroll_handle.scroll_to_bottom();
-        cx.notify();
-      });
-    }));
-
-    cx.notify();
-  }
-
-  pub fn set_title(
-    &mut self,
-    title: String,
-    cx: &mut Context<Self>,
-  ) {
-    let title = title.trim();
-    if title.is_empty() || self.title == title {
-      return;
-    }
-    self.title = SharedString::from(title.to_string());
-    cx.emit(ChatEvent::TitleChanged);
     cx.notify();
   }
 
@@ -212,101 +139,28 @@ impl PanelChat {
     cx: &mut Context<Self>,
   ) {
     let text = self.input.read(cx).value().trim().to_string();
-    if text.is_empty() || self.response.is_some() {
+    if text.is_empty() || self.state.status != ConversationStatus::Idle {
       return;
     }
 
-    // Reconnecting only between responses keeps the session id settled, so a
-    // first prompt still in flight can't leave the new agent opening a second
-    // session.
-    let config = AppServices::obtain().config();
-    if !Arc::ptr_eq(&config, &self.agent_config) || self.agent_model != self.model {
-      (self.agent, self._naming) =
-        connect_agent(self.session_id.clone(), &config, self.model.as_deref(), cx);
-      self.agent_config = config;
-      self.agent_model = self.model.clone();
-    }
-
-    self
-      .input
-      .update(cx, |input, cx| input.set_value("", window, cx));
-
-    let events = match &self.agent {
-      Ok(agent) => Ok(agent.prompt(&text)),
-      Err(error) => Err(format!("{error:#}")),
-    };
-    self.messages.push(ChatMessage {
-      role: ChatRole::User,
-      message_id: None,
-      content: text,
-    });
-    self.scroll_handle.scroll_to_bottom();
-
-    let mut events = match events {
-      Ok(events) => events,
-      Err(error) => {
-        self.append(AgentEvent::Error(error), cx);
-        cx.notify();
-        return;
-      }
-    };
-
-    self.response = Some(cx.spawn(async move |this, cx| {
-      while let Some(event) = events.recv().await {
-        let appended = this.update(cx, |this, cx| {
-          this.append(event, cx);
-          this.scroll_handle.scroll_to_bottom();
-          cx.notify();
-        });
-        if appended.is_err() {
-          return;
-        }
-      }
-      let _ = this.update(cx, |this, cx| {
-        this.response = None;
-        cx.emit(ChatEvent::Updated);
-        cx.notify();
-      });
-    }));
-
-    cx.notify();
-  }
-
-  fn append(
-    &mut self,
-    event: AgentEvent,
-    cx: &mut Context<Self>,
-  ) {
-    match event {
-      AgentEvent::Session { id } => {
-        self.session_id = Some(id);
-        cx.emit(ChatEvent::Updated);
-      }
-      AgentEvent::Text { message_id, delta } => match self.messages.last_mut() {
-        Some(last) if last.role == ChatRole::Agent && last.message_id == message_id => {
-          last.content.push_str(&delta)
-        }
-        _ => self.messages.push(ChatMessage {
-          role: ChatRole::Agent,
-          message_id,
-          content: delta,
-        }),
-      },
-      AgentEvent::Error(error) => self.messages.push(ChatMessage {
-        role: ChatRole::Error,
-        message_id: None,
-        content: error,
-      }),
+    if self
+      .conversation
+      .send(ConversationCommand::Prompt(text))
+      .is_ok()
+    {
+      self
+        .input
+        .update(cx, |input, cx| input.set_value("", window, cx));
     }
   }
 
   fn select_model(
     &mut self,
     name: SharedString,
-    cx: &mut Context<Self>,
   ) {
-    self.model = Some(name);
-    cx.notify();
+    let _ = self
+      .conversation
+      .send(ConversationCommand::SetModel(name.to_string()));
   }
 
   fn model_picker(
@@ -329,7 +183,7 @@ impl PanelChat {
       .as_ref()
       .as_ref()
       .ok()
-      .and_then(|config| resolve_model(config, self.model.as_deref()))
+      .and_then(|config| config.resolve_model(self.state.model.as_deref()))
       .map(|model| SharedString::from(model.name.clone()));
     let label = selected
       .clone()
@@ -360,7 +214,7 @@ impl PanelChat {
               PopupMenuItem::new(name.clone())
                 .checked(selected.as_ref() == Some(name))
                 .on_click(move |_, _, cx| {
-                  let _ = this.update(cx, |this, cx| this.select_model(item_name.clone(), cx));
+                  let _ = this.update(cx, |this, _| this.select_model(item_name.clone()));
                 }),
             )
           })
@@ -370,57 +224,13 @@ impl PanelChat {
   }
 }
 
-fn resolve_model<'a>(
-  config: &'a Config,
-  name: Option<&str>,
-) -> Option<&'a AgentConfig> {
-  name
-    .and_then(|name| config.models.iter().find(|model| model.name == name))
-    .or_else(|| config.models.first())
-}
-
-fn connect_agent(
-  session_id: Option<String>,
-  config: &anyhow::Result<Config>,
-  model: Option<&str>,
-  cx: &mut Context<PanelChat>,
-) -> (anyhow::Result<AgentHarness>, Option<Task<()>>) {
-  let mut agent = config
-    .as_ref()
-    .map_err(|error| anyhow::anyhow!("Settings failed to load: {error:#}"))
-    .and_then(|config| resolve_model(config, model).context("No models configured"))
-    .map(|model| {
-      AgentHarness::new(AgentHarnessOptions {
-        session_id,
-        ..model.into()
-      })
-    });
-
-  let naming = agent
-    .as_mut()
-    .ok()
-    .and_then(AgentHarness::take_names)
-    .map(|mut names| {
-      cx.spawn(async move |this, cx| {
-        while let Some(name) = names.recv().await {
-          let renamed = this.update(cx, |this, cx| this.set_title(name, cx));
-          if renamed.is_err() {
-            return;
-          }
-        }
-      })
-    });
-
-  (agent, naming)
-}
-
 impl Render for PanelChat {
   fn render(
     &mut self,
     _window: &mut Window,
     cx: &mut Context<Self>,
   ) -> impl IntoElement {
-    let has_messages = !self.messages.is_empty();
+    let has_messages = !self.state.messages.is_empty();
     let on_send = cx.listener(|this, _: &ClickEvent, window, cx| this.submit(window, cx));
     let model_picker = self.model_picker(cx);
 
@@ -443,7 +253,7 @@ impl Render for PanelChat {
               .pt(px(16.0))
               .pb(MESSAGES_BOTTOM_PADDING)
               .gap(px(16.0))
-              .children(self.messages.iter().enumerate().map(chat_message)),
+              .children(self.state.messages.iter().enumerate().map(chat_message)),
           ),
       )
       .child(
@@ -465,22 +275,22 @@ impl Render for PanelChat {
   }
 }
 
-fn chat_message((ix, message): (usize, &ChatMessage)) -> AnyElement {
+fn chat_message((ix, message): (usize, &ConversationMessage)) -> AnyElement {
   let id = ("chat-message", ix);
   match message.role {
-    ChatRole::User => AppChatBubbleUser::new(id)
+    MessageRole::User => AppChatBubbleUser::new(id)
       .self_end()
       .max_w(px(600.0))
-      .child(message.content.clone())
+      .child(message.text.clone())
       .into_any_element(),
-    ChatRole::Agent => AppMarkdown::new(id, message.content.clone())
+    MessageRole::Agent => AppMarkdown::new(id, message.text.clone())
       .text_sm()
       .into_any_element(),
-    ChatRole::Error => div()
+    MessageRole::Error => div()
       .id(id)
       .text_sm()
       .text_color(rgb(theme::colors::COLOR_ERROR_FOREGROUND))
-      .child(message.content.clone())
+      .child(message.text.clone())
       .into_any_element(),
   }
 }

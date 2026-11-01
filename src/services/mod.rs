@@ -1,35 +1,36 @@
-pub mod agent;
 pub mod config;
+pub mod conversations;
 pub mod updates;
 
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::OnceLock;
-use std::sync::PoisonError;
-use std::sync::RwLock;
 
 // use self::agent::AgentHarness;
 use self::config::Config;
+use self::config::ConfigService;
+use self::conversations::Conversations;
 
 static APP_SERVICES: OnceLock<AppServices> = OnceLock::new();
 
 pub struct AppServices {
   // pub agent_harness: Arc<AgentHarness>,
   config_path: PathBuf,
-  // A config that fails to load is kept as its error so the app still starts
-  // and chats can report it.
-  config: RwLock<Arc<anyhow::Result<Config>>>,
+  config: ConfigService,
+  conversations: Conversations,
 }
 
 impl AppServices {
   pub fn new(
     config_path: PathBuf,
-    config: anyhow::Result<Config>,
+    config: ConfigService,
+    conversations: Conversations,
   ) -> Self {
     Self {
       config_path,
-      config: RwLock::new(Arc::new(config)),
+      config,
+      conversations,
     }
   }
 
@@ -38,18 +39,18 @@ impl AppServices {
   }
 
   pub fn config(&self) -> Arc<anyhow::Result<Config>> {
-    self
-      .config
-      .read()
-      .unwrap_or_else(PoisonError::into_inner)
-      .clone()
+    self.config.get()
   }
 
   pub fn set_config(
     &self,
     config: anyhow::Result<Config>,
   ) {
-    *self.config.write().unwrap_or_else(PoisonError::into_inner) = Arc::new(config);
+    self.config.set(config);
+  }
+
+  pub fn conversations(&self) -> &Conversations {
+    &self.conversations
   }
 
   pub fn register_global(self) -> anyhow::Result<()> {

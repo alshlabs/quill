@@ -1,6 +1,9 @@
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::PoisonError;
+use std::sync::RwLock;
 
 use anyhow::Context as _;
 use serde::Deserialize;
@@ -9,6 +12,38 @@ use serde_yaml::Value;
 
 const ENV_PREFIX: &str = "${env.";
 const DEFAULT_CONFIG: &str = include_str!("../../quill.yaml.default");
+
+/// The current config, shared by everything that reads it and replaced when
+/// settings are saved.
+#[derive(Clone)]
+pub struct ConfigService {
+  // A config that fails to load is kept as its error so the app still starts
+  // and chats can report it.
+  config: Arc<RwLock<Arc<anyhow::Result<Config>>>>,
+}
+
+impl ConfigService {
+  pub fn new(config: anyhow::Result<Config>) -> Self {
+    Self {
+      config: Arc::new(RwLock::new(Arc::new(config))),
+    }
+  }
+
+  pub fn get(&self) -> Arc<anyhow::Result<Config>> {
+    self
+      .config
+      .read()
+      .unwrap_or_else(PoisonError::into_inner)
+      .clone()
+  }
+
+  pub fn set(
+    &self,
+    config: anyhow::Result<Config>,
+  ) {
+    *self.config.write().unwrap_or_else(PoisonError::into_inner) = Arc::new(config);
+  }
+}
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Config {
@@ -49,6 +84,16 @@ impl Config {
 
   pub fn from_yaml_file(file_path: &Path) -> anyhow::Result<Self> {
     Self::from_yaml(&fs::read_to_string(file_path)?, file_path)
+  }
+
+  /// The named model, falling back to the first configured one.
+  pub fn resolve_model(
+    &self,
+    name: Option<&str>,
+  ) -> Option<&AgentConfig> {
+    name
+      .and_then(|name| self.models.iter().find(|model| model.name == name))
+      .or_else(|| self.models.first())
   }
 
   pub fn resolve_config(root: &Path) -> anyhow::Result<PathBuf> {
