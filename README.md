@@ -2,10 +2,10 @@
 
 ## The lightweight, native desktop harness for every LLM
 
-- Native Desktop UI APIs (No Electron)
-- Minimal resource footprint, under 70mb of ram
-- Extremely fast Rust core
-- Supports every LLM provider, no lock down
+- 🖥️ Native Desktop UI APIs (No Electron)
+- 💾 Minimal resource footprint, under 70 MB of RAM
+- ⚡ Extremely fast Rust core
+- 🔌 Supports every LLM provider, no lock-in
 
 <div align="center">
 <img width="800" alt="Screenshot 2026-10-31 at 10 50 53 PM" src="https://github.com/user-attachments/assets/d82f7e9a-24fe-4c29-a864-bfbeb279f27e" />
@@ -15,7 +15,7 @@
 
 ## Downloads
 
-Download from Github releases and run, self updating, no installer require.
+Download from Github releases and run. No installer required, self updating.
 
 |Platform|Link|
 |-|-|
@@ -29,24 +29,26 @@ _Note: the MacOS build is unsigned because I am not spending US$99/year for an A
 
 ### Uninstalling
 
-Uses portable executables. To uninstall delete the executable and the config under `$HOME/.config/quill`.
+Quill is distributed as portable executables. To uninstall, delete the executable and the config under `$HOME/.config/quill`.
 
 ## Demo
 
 https://github.com/user-attachments/assets/8335baf6-c4ed-4f25-a554-4dc7140fc3c7
 
-
+<br>
 <div align="center">
 <img src="./docs/usage-2026-10-25.png" />
 </div>
 
 ## How does this work?
 
-Quill uses the work done by the [Zed editor](https://zed.dev/), utilizing their cross platform [gpui-kit](https://crates.io/crates/gpui-kit).
+### Native UI 
 
-Simply put, gpui leverages native APIs (Metal, Vulkan and DirectX) to draw the UI. You can think of it as using a game engine to render a UI, except it only renders frames when things are moving, ensuring power usage / battery life is unaffected.
+Quill uses the work done by the [Zed editor](https://zed.dev/), utilizing their cross platform GPU accelerated GUI framework: [gpui-kit](https://crates.io/crates/gpui-kit).
 
-It renders frames at your screen's refresh rate (e.g. 144fps) so the experience is buttery smooth.
+### Harness
+
+Quill uses the [Goose harness](https://github.com/aaif-goose/goose) to give the agent access to the system.
 
 ## Motivation for this project
 
@@ -70,11 +72,19 @@ Additionally, the technology powering Quill means that adding features is not so
 
 ## License
 
-I have gone with an unconventional non-commercial license that has an clause for AI training. I'm not anti-AI at all (obviously) and have no expectations that my license will be respected. 
+I have gone with an unconventional non-commercial license that has an clause restricting AI training. 
 
-The intention is that - should this code be included in training data - throw a little something my way for the training data.
+I'm not anti-AI at all (obviously) and have no expectations that my license will be respected, however my thinking is that;
+
+- I enjoy sharing my work and would normally distribute this under a copy-left license.
+- I would like people to play around with the project and contribute
+- However, I feel that our collective works were unfairly used to train models that resulted in unimaginably lucrative businesses, of which we receive no attribution or royalties - only redundancies
+
+So my intention is, should this code be included in training data, simply throw a little something my way for the training data.
 
 If you're doing research or working on an open weight model, feel free to include this in your training data.
+
+If you're a coder who would like to contribute, learn from or fork this project - go for it.
 
 ## Support The Development
 
