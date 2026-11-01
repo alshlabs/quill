@@ -195,7 +195,7 @@ impl<V> AppRoot<V> {
               .child("Quill"),
           ),
       )
-      .when(update_state != UpdateState::UpToDate, |this| {
+      .when(update_state == UpdateState::Available, |this| {
         this.child(
           div()
             .flex_shrink_0()
@@ -211,7 +211,7 @@ impl<V> AppRoot<V> {
 
 fn update_button(state: UpdateState) -> Option<Stateful<Div>> {
   let label = match state {
-    UpdateState::UpToDate => return None,
+    UpdateState::UpToDate | UpdateState::Installing => return None,
     UpdateState::Available => "Update Available",
   };
 

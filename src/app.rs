@@ -61,6 +61,7 @@ pub enum UpdateState {
   #[default]
   UpToDate,
   Available,
+  Installing,
 }
 
 impl Global for UpdateState {}
@@ -82,6 +83,8 @@ pub fn init(cx: &mut App) {
     KeyBinding::new("ctrl-shift-tab", PrevTab, None),
   ]);
 
+  cx.on_action(install_update);
+
   check_for_update(cx);
 }
 
@@ -95,6 +98,36 @@ fn check_for_update(cx: &mut App) {
       cx.set_global(UpdateState::Available);
       cx.refresh_windows();
     });
+  })
+  .detach();
+}
+
+fn install_update(
+  _: &Update,
+  cx: &mut App,
+) {
+  if UpdateState::get(cx) != UpdateState::Available {
+    return;
+  }
+  cx.set_global(UpdateState::Installing);
+
+  // The process has to outlive its windows while the update installs.
+  cx.set_quit_mode(QuitMode::Explicit);
+  // Deferred because the window that dispatched the action is checked out of the
+  // app until the dispatch returns, so it can't be closed from here.
+  cx.defer(|cx| {
+    for window in cx.windows() {
+      let _ = window.update(cx, |_, window, _| window.remove_window());
+    }
+  });
+
+  let upgrade = updates::try_upgrade();
+  cx.spawn(async move |cx| {
+    let _ = upgrade.await;
+    // Relaunching even when the install failed brings the current release back
+    // instead of leaving the app closed.
+    let _ = updates::relaunch();
+    cx.update(|cx| cx.quit());
   })
   .detach();
 }
@@ -140,31 +173,6 @@ impl AppRoot {
       sidebar_chats,
       _subscriptions: subscriptions,
     }
-  }
-
-  fn install_update(
-    &mut self,
-    _: &Update,
-    window: &mut Window,
-    cx: &mut Context<Self>,
-  ) {
-    if UpdateState::get(cx) != UpdateState::Available {
-      return;
-    }
-
-    // The process has to outlive its window while the update installs.
-    cx.set_quit_mode(QuitMode::Explicit);
-    window.remove_window();
-
-    let upgrade = updates::try_upgrade();
-    cx.spawn(async move |_, cx| {
-      let _ = upgrade.await;
-      // Relaunching even when the install failed brings the current release back
-      // instead of leaving the app closed.
-      let _ = updates::relaunch();
-      cx.update(|cx| cx.quit());
-    })
-    .detach();
   }
 
   fn add_chat(
@@ -324,7 +332,6 @@ impl Render for AppRoot {
       .on_action(cx.listener(Self::close_tab))
       .on_action(cx.listener(Self::next_tab))
       .on_action(cx.listener(Self::prev_tab))
-      .on_action(cx.listener(Self::install_update))
       .h_full()
       .w_full()
       // Title bar

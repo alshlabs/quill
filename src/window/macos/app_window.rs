@@ -80,7 +80,7 @@ impl<V> AppRoot<V> {
 
 fn update_button(state: UpdateState) -> Option<Stateful<Div>> {
   let label = match state {
-    UpdateState::UpToDate => return None,
+    UpdateState::UpToDate | UpdateState::Installing => return None,
     UpdateState::Available => "Update Available",
   };
 
