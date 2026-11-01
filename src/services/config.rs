@@ -53,19 +53,12 @@ pub struct Config {
   pub models: Vec<AgentConfig>,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize)]
 pub struct AgentConfig {
   pub name: String,
   pub model_id: String,
   pub provider_host: String,
   pub provider_token: String,
-  #[serde(default)]
-  pub vision: bool,
-  #[serde(default)]
-  pub thinking: bool,
-  pub max_input_tokens: usize,
-  pub max_output_tokens: usize,
 }
 
 impl Config {
