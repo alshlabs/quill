@@ -1,5 +1,5 @@
 use std::future::Future;
-use std::sync::Arc;
+use std::rc::Rc;
 
 use gpui_kit::component::Root;
 use gpui_kit::component::Theme;
@@ -10,6 +10,7 @@ use gpui_kit::*;
 use super::app_window::AppRoot;
 use super::dwm;
 use super::typography;
+use crate::app::NewWindow;
 
 const TITLE_BAR_HEIGHT: f32 = 35.;
 const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
@@ -17,21 +18,19 @@ const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
 pub fn bootstrap<V, F, Fut>(
   init_callback: impl FnOnce(&mut App) + 'static,
   spawn_callback: F,
-  root_component: impl FnOnce(&mut Window, &mut App) -> Entity<V> + 'static,
-  window_callback: impl FnOnce(&mut Window, &mut App) + 'static,
+  root_component: impl Fn(&mut Window, &mut App) -> Entity<V> + 'static,
+  window_callback: impl Fn(&mut Window, &mut App) + 'static,
 ) where
   V: Render + 'static,
-  F: FnOnce(&mut AsyncApp, &mut WindowOptions) -> Fut + 'static,
+  F: Fn(&mut AsyncApp, &mut WindowOptions) -> Fut + 'static,
   Fut: Future<Output = ()> + 'static,
 {
-  gpui_kit::application().run(|cx| {
-    gpui_kit::init(cx);
+  let callbacks = Rc::new((spawn_callback, root_component, window_callback));
 
-    cx.set_cursor_hide_mode(CursorHideMode::Never);
-
-    init_callback(cx);
-
+  let open_main_window = move |cx: &mut App| {
+    let callbacks = callbacks.clone();
     cx.spawn(async move |cx| {
+      let (spawn_callback, root_component, window_callback) = &*callbacks;
       let mut options = TitleBar::window_options();
 
       options.window_bounds = Some(WindowBounds::Windowed(Bounds::new(
@@ -55,19 +54,6 @@ pub fn bootstrap<V, F, Fut>(
       spawn_callback(cx, &mut options).await;
 
       cx.open_window(options, move |window, cx| {
-        Theme::change(ThemeMode::Dark, Some(window), cx);
-        // The component library has no per-input placeholder color; this theme
-        // token is the only hook, and it also dims the library's other muted text.
-        Theme::global_mut(cx).muted_foreground =
-          rgb(crate::theme::colors::COLOR_INPUT_PLACEHOLDER_FOREGROUND).into();
-        Theme::global_mut(cx).popover = rgb(crate::theme::colors::COLOR_PANEL_BACKGROUND).into();
-        let highlight_theme = Arc::make_mut(&mut Theme::global_mut(cx).highlight_theme);
-        highlight_theme.style.editor_background =
-          Some(rgb(crate::theme::colors::COLOR_EDITOR_BACKGROUND).into());
-        highlight_theme.style.editor_active_line =
-          Some(rgb(crate::theme::colors::COLOR_EDITOR_LINE_HIGHLIGHT_BACKGROUND).into());
-        Theme::global_mut(cx).font_family = typography::FONT_FAMILY.into();
-
         dwm::prefer_square_corners(window);
 
         window_callback(window, cx);
@@ -87,5 +73,26 @@ pub fn bootstrap<V, F, Fut>(
       .expect("failed to open window");
     })
     .detach();
+  };
+
+  gpui_kit::application().run(move |cx| {
+    gpui_kit::init(cx);
+
+    cx.set_cursor_hide_mode(CursorHideMode::Never);
+
+    crate::theme::set_mode(ThemeMode::Dark, cx);
+
+    init_callback(cx);
+
+    cx.on_action({
+      let open_main_window = open_main_window.clone();
+      move |_: &NewWindow, cx| open_main_window(cx)
+    });
+
+    open_main_window(cx);
   });
+}
+
+pub fn apply_theme_overrides(cx: &mut App) {
+  Theme::global_mut(cx).font_family = typography::FONT_FAMILY.into();
 }

@@ -1,14 +1,13 @@
 use std::future::Future;
 use std::rc::Rc;
-use std::sync::Arc;
 
 use gpui_kit::component::Root;
-use gpui_kit::component::Theme;
 use gpui_kit::component::ThemeMode;
 use gpui_kit::component::TitleBar;
 use gpui_kit::*;
 
 use super::app_window::AppRoot;
+use crate::app::NewWindow;
 use crate::theme;
 
 const TRAFFIC_LIGHT_X: f32 = 15.;
@@ -56,18 +55,6 @@ pub fn bootstrap<V, F, Fut>(
       spawn_callback(cx, &mut options).await;
 
       cx.open_window(options, move |window, cx| {
-        Theme::change(ThemeMode::Dark, Some(window), cx);
-        // The component library has no per-input placeholder color; this theme
-        // token is the only hook, and it also dims the library's other muted text.
-        Theme::global_mut(cx).muted_foreground =
-          rgb(crate::theme::colors::COLOR_INPUT_PLACEHOLDER_FOREGROUND).into();
-        Theme::global_mut(cx).popover = rgb(crate::theme::colors::COLOR_PANEL_BACKGROUND).into();
-        let highlight_theme = Arc::make_mut(&mut Theme::global_mut(cx).highlight_theme);
-        highlight_theme.style.editor_background =
-          Some(rgb(crate::theme::colors::COLOR_EDITOR_BACKGROUND).into());
-        highlight_theme.style.editor_active_line =
-          Some(rgb(crate::theme::colors::COLOR_EDITOR_LINE_HIGHLIGHT_BACKGROUND).into());
-
         window_callback(window, cx);
 
         let view = cx.new(|cx| AppRoot {
@@ -98,8 +85,17 @@ pub fn bootstrap<V, F, Fut>(
 
     cx.set_cursor_hide_mode(CursorHideMode::Never);
 
+    crate::theme::set_mode(ThemeMode::Dark, cx);
+
     init_callback(cx);
+
+    cx.on_action({
+      let open_main_window = open_main_window.clone();
+      move |_: &NewWindow, cx| open_main_window(cx)
+    });
 
     open_main_window(cx);
   });
 }
+
+pub fn apply_theme_overrides(_cx: &mut App) {}

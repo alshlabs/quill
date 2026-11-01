@@ -19,6 +19,7 @@ mod inner;
 mod inner;
 
 pub use inner::TITLE_BAR_HEIGHT;
+pub use inner::apply_theme_overrides;
 pub use inner::bootstrap;
 
 pub const WINDOW_MIN_WIDTH: f32 = 600.;

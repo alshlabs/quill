@@ -46,6 +46,7 @@ actions!(
   quill,
   [
     NewChat,
+    NewWindow,
     OpenSettings,
     Save,
     CloseTab,
