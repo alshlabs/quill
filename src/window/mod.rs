@@ -18,6 +18,7 @@ mod inner;
 #[path = "linux/mod.rs"]
 mod inner;
 
+pub use inner::TITLE_BAR_HEIGHT;
 pub use inner::bootstrap;
 
 pub const WINDOW_MIN_WIDTH: f32 = 600.;

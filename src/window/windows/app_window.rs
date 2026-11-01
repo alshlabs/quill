@@ -52,7 +52,7 @@ use crate::theme::colors::COLOR_GREY_50;
 use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
 use crate::theme::colors::COLOR_WINDOW_INACTIVE_BACKGROUND;
 
-const TITLE_BAR_HEIGHT: f32 = 42.;
+pub const TITLE_BAR_HEIGHT: f32 = 35.;
 const BRAND_LOGO_SIZE: f32 = 20.;
 const BRAND_COLOR: u32 = COLOR_ACTIVITY_BAR_FOREGROUND;
 /// Centres the logo over the sidebar nav icons, which sit 26px in from the

@@ -302,7 +302,7 @@ impl Render for AppRoot {
       .h_full()
       .w_full()
       // Title bar
-      .child(div().flex_shrink_0().h(px(42.0)))
+      .child(div().flex_shrink_0().h(px(crate::window::TITLE_BAR_HEIGHT)))
       // Side bar
       .child(
         h_flex()

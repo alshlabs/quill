@@ -11,7 +11,7 @@ use super::app_window::AppRoot;
 use super::dwm;
 use super::typography;
 
-const TITLE_BAR_HEIGHT: f32 = 42.;
+const TITLE_BAR_HEIGHT: f32 = 35.;
 const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
 
 pub fn bootstrap<V, F, Fut>(
