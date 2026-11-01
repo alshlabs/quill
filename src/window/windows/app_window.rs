@@ -33,6 +33,7 @@
 //! the caption's command: a click on close drags the window instead of closing
 //! it. The strip therefore reserves [`WINDOW_CONTROLS_WIDTH`] at the right edge.
 
+use gpui_kit::base::TextSelection;
 use gpui_kit::component::Icon;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
@@ -81,6 +82,24 @@ fn strip_boundary() -> impl IntoElement {
     .bg(rgb(COLOR_GREY_50))
 }
 
+/// A press on the caption or the resize frame reaches gpui as a mouse down and
+/// starts a text selection, but Windows' modal move/size loop swallows the
+/// release, so the selection would keep following the pointer.
+fn stuck_selection_guard() -> impl IntoElement {
+  canvas(
+    |_, _, _| {},
+    |_, _, window, _| {
+      window.on_mouse_event(|event: &MouseMoveEvent, phase, window, cx| {
+        if phase.capture() && event.pressed_button != Some(MouseButton::Left) {
+          TextSelection::end(window, cx);
+        }
+      });
+    },
+  )
+  .absolute()
+  .size_full()
+}
+
 pub struct AppRoot<V> {
   pub root_focus: FocusHandle,
   pub root: Entity<V>,
@@ -113,7 +132,8 @@ impl<V: Render + 'static> Render for AppRoot<V> {
       .child(self.root.clone())
       // The controls come last, after the content has painted its own top area
       // over the strip: they are the shell's, and stay above the application.
-      .child(self.window_controls(window, update_state));
+      .child(self.window_controls(window, update_state))
+      .child(stuck_selection_guard());
     // .child(strip_boundary());
 
     window_decoration::window_frame().child(body)
