@@ -83,14 +83,11 @@ impl PanelChat {
       }
     });
 
-    let scroll_handle = ScrollHandle::new();
-    scroll_handle.scroll_to_bottom();
-
     Self {
       conversation,
       state,
       input,
-      scroll_handle,
+      scroll_handle: ScrollHandle::new(),
       _updates: updates,
       _subscriptions: vec![on_input],
     }
@@ -230,6 +227,13 @@ impl Render for PanelChat {
     _window: &mut Window,
     cx: &mut Context<Self>,
   ) -> impl IntoElement {
+    // Markdown is parsed in the background, so messages keep growing after
+    // the frame that consumed a one-shot scroll_to_bottom. Re-pin every frame
+    // while the view was resting at the bottom.
+    if self.scroll_handle.offset().y <= -self.scroll_handle.max_offset().y + px(1.0) {
+      self.scroll_handle.scroll_to_bottom();
+    }
+
     let has_messages = !self.state.messages.is_empty();
     let on_send = cx.listener(|this, _: &ClickEvent, window, cx| this.submit(window, cx));
     let model_picker = self.model_picker(cx);
