@@ -31,12 +31,11 @@ pub fn bootstrap<V, F, Fut>(
     let callbacks = callbacks.clone();
     cx.spawn(async move |cx| {
       let (spawn_callback, root_component, window_callback) = &*callbacks;
+      let (bounds, display_id) = cx.update(crate::window::placement::main_window_placement);
       let mut options = TitleBar::window_options();
 
-      options.window_bounds = Some(WindowBounds::Windowed(Bounds::new(
-        point(px(120.), px(120.)),
-        size(px(1460.), px(978.)),
-      )));
+      options.window_bounds = Some(WindowBounds::Windowed(bounds));
+      options.display_id = display_id;
 
       options.window_min_size = Some(size(px(crate::window::WINDOW_MIN_WIDTH), px(400.)));
 

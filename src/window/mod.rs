@@ -18,6 +18,8 @@ mod inner;
 #[path = "linux/mod.rs"]
 mod inner;
 
+mod placement;
+
 pub use inner::TITLE_BAR_HEIGHT;
 pub use inner::apply_theme_overrides;
 pub use inner::bootstrap;
