@@ -3,6 +3,8 @@ use std::time::SystemTime;
 use gpui_kit::base::h_flex;
 use gpui_kit::base::v_flex;
 use gpui_kit::component::Icon;
+use gpui_kit::component::menu::ContextMenuExt as _;
+use gpui_kit::component::menu::PopupMenuItem;
 use gpui_kit::*;
 
 use crate::app::NewChat;
@@ -13,6 +15,8 @@ use crate::theme;
 
 pub struct OpenChat(pub String);
 
+pub struct ChatDeleted(pub String);
+
 pub struct SidebarChats {
   chats: Vec<ChatSummary>,
   error: Option<SharedString>,
@@ -20,6 +24,8 @@ pub struct SidebarChats {
 }
 
 impl EventEmitter<OpenChat> for SidebarChats {}
+
+impl EventEmitter<ChatDeleted> for SidebarChats {}
 
 impl SidebarChats {
   pub fn new(cx: &mut Context<Self>) -> Self {
@@ -51,6 +57,51 @@ impl SidebarChats {
       });
     }));
   }
+
+  fn delete_chat(
+    &mut self,
+    session_id: String,
+    cx: &mut Context<Self>,
+  ) {
+    let delete = agent::delete_chat(session_id.clone());
+    cx.spawn(async move |this, cx| {
+      let result = delete.await;
+      let _ = this.update(cx, |this, cx| {
+        if result.is_ok() {
+          cx.emit(ChatDeleted(session_id));
+        }
+        this.finish_change(result, cx);
+      });
+    })
+    .detach();
+  }
+
+  fn clone_chat(
+    &mut self,
+    session_id: String,
+    cx: &mut Context<Self>,
+  ) {
+    let clone = agent::clone_chat(session_id);
+    cx.spawn(async move |this, cx| {
+      let result = clone.await;
+      let _ = this.update(cx, |this, cx| this.finish_change(result, cx));
+    })
+    .detach();
+  }
+
+  fn finish_change(
+    &mut self,
+    result: anyhow::Result<()>,
+    cx: &mut Context<Self>,
+  ) {
+    match result {
+      Ok(()) => self.refresh(cx),
+      Err(error) => {
+        self.error = Some(format!("{error:#}").into());
+        cx.notify();
+      }
+    }
+  }
 }
 
 impl Render for SidebarChats {
@@ -60,6 +111,7 @@ impl Render for SidebarChats {
     cx: &mut Context<Self>,
   ) -> impl IntoElement {
     let now = SystemTime::now();
+    let this = cx.entity().downgrade();
 
     let chats = v_flex()
       .id("sidebar_chats")
@@ -101,6 +153,15 @@ impl Render for SidebarChats {
               .text_color(rgb(theme::colors::COLOR_DESCRIPTION_FOREGROUND))
               .child(relative_time(now, chat.updated_at)),
           )
+          .context_menu({
+            let this = this.clone();
+            let id = chat.id.clone();
+            move |menu, _, _| {
+              menu
+                .item(chat_menu_item("Clone", &this, &id, Self::clone_chat))
+                .item(chat_menu_item("Delete", &this, &id, Self::delete_chat))
+            }
+          })
       }));
 
     v_flex()
@@ -110,6 +171,19 @@ impl Render for SidebarChats {
       .child(header())
       .child(chats)
   }
+}
+
+fn chat_menu_item(
+  label: &'static str,
+  this: &WeakEntity<SidebarChats>,
+  session_id: &str,
+  action: fn(&mut SidebarChats, String, &mut Context<SidebarChats>),
+) -> PopupMenuItem {
+  let this = this.clone();
+  let session_id = session_id.to_string();
+  PopupMenuItem::new(label).on_click(move |_, _, cx| {
+    let _ = this.update(cx, |this, cx| action(this, session_id.clone(), cx));
+  })
 }
 
 fn header() -> Div {

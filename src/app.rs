@@ -20,12 +20,14 @@ use crate::panels::panel_chat::PanelChat;
 use crate::panels::panel_settings::DirtyChanged;
 use crate::panels::panel_settings::PanelSettings;
 use crate::services::updates;
+use crate::sidebars::sidebar_chats::ChatDeleted;
 use crate::sidebars::sidebar_chats::OpenChat;
 use crate::sidebars::sidebar_chats::SidebarChats;
 use crate::sidebars::sidebar_plugins::SidebarPlugins;
 use crate::sidebars::sidebar_search::SidebarSearch;
 use crate::sidebars::sidebar_workspaces::SidebarWorkspaces;
 use crate::tabs::Tab;
+use crate::tabs::TabId;
 use crate::tabs::TabKind;
 use crate::tabs::Tabs;
 use crate::theme;
@@ -104,6 +106,9 @@ impl AppRoot {
         window,
         |this, _, event: &OpenChat, window, cx| this.open_chat(event.0.clone(), window, cx),
       ),
+      cx.subscribe(&sidebar_chats, |this, _, event: &ChatDeleted, cx| {
+        this.close_chat(&event.0, cx)
+      }),
     ];
 
     let mut this = Self {
@@ -185,24 +190,39 @@ impl AppRoot {
     window: &mut Window,
     cx: &mut Context<Self>,
   ) {
-    let open_tab = self
-      .tabs
-      .read(cx)
-      .items()
-      .iter()
-      .find_map(|tab| match &tab.kind {
-        TabKind::Chat(chat) => {
-          (chat.read(cx).session_id() == Some(session_id.as_str())).then_some(tab.id)
-        }
-        TabKind::Settings(_) => None,
-      });
-    if let Some(id) = open_tab {
+    if let Some(id) = self.chat_tab(&session_id, cx) {
       self.tabs.update(cx, |tabs, cx| tabs.activate(id, cx));
       return;
     }
 
     let chat = self.add_chat(window, cx);
     chat.update(cx, |chat, cx| chat.load_session(session_id, cx));
+  }
+
+  fn close_chat(
+    &mut self,
+    session_id: &str,
+    cx: &mut Context<Self>,
+  ) {
+    if let Some(id) = self.chat_tab(session_id, cx) {
+      self.tabs.update(cx, |tabs, cx| tabs.close(id, cx));
+    }
+  }
+
+  fn chat_tab(
+    &self,
+    session_id: &str,
+    cx: &App,
+  ) -> Option<TabId> {
+    self
+      .tabs
+      .read(cx)
+      .items()
+      .iter()
+      .find_map(|tab| match &tab.kind {
+        TabKind::Chat(chat) => (chat.read(cx).session_id() == Some(session_id)).then_some(tab.id),
+        TabKind::Settings(_) => None,
+      })
   }
 
   fn new_chat(

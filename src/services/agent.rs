@@ -175,6 +175,23 @@ pub fn load_history(session_id: String) -> impl Future<Output = Result<ChatHisto
   })
 }
 
+pub fn delete_chat(session_id: String) -> impl Future<Output = Result<()>> {
+  spawn(async move { SessionManager::instance().delete_session(&session_id).await })
+}
+
+pub fn clone_chat(session_id: String) -> impl Future<Output = Result<()>> {
+  spawn(async move {
+    let sessions = SessionManager::instance();
+    let session = sessions.get_session(&session_id, false).await?;
+    let name = match session.name.trim() {
+      "" | SESSION_NAME => SESSION_NAME.to_string(),
+      name => format!("{name} (copy)"),
+    };
+    sessions.copy_session(&session_id, name).await?;
+    Ok(())
+  })
+}
+
 fn last_active(session: &Session) -> SystemTime {
   session.last_message_at.unwrap_or(session.updated_at).into()
 }
