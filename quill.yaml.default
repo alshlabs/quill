@@ -3,3 +3,7 @@
 #    model_id: deepseek-flash
 #    provider_host: https://api.deepseek.com
 #    provider_token: ${env.DEEPSEEK_API_KEY}
+#    vision: true
+#    thinking: true
+#    max_input_tokens: 393216
+#    max_output_tokens: 393216
