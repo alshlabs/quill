@@ -7072,6 +7072,7 @@ name = "quill"
 version = "0.0.0-local"
 dependencies = [
  "anyhow",
+ "dunce",
  "futures",
  "goose",
  "goose-mcp",

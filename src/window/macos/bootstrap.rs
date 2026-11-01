@@ -8,6 +8,7 @@ use gpui_kit::*;
 
 use super::app_window::AppRoot;
 use crate::app::NewWindow;
+use crate::app::OpenWorkspace;
 use crate::theme;
 
 const TRAFFIC_LIGHT_X: f32 = 15.;
@@ -96,7 +97,10 @@ pub fn bootstrap<V, F, Fut>(
     // own name, so window commands go in a menu after it.
     cx.set_menus([
       Menu::new("Quill").items([MenuItem::action("Quit Quill", Quit)]),
-      Menu::new("File").items([MenuItem::action("New Window", NewWindow)]),
+      Menu::new("File").items([
+        MenuItem::action("New Window", NewWindow),
+        MenuItem::action("Open Workspace…", OpenWorkspace),
+      ]),
     ]);
 
     cx.on_action({

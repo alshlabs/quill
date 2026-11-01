@@ -6,6 +6,7 @@ license-file = "LICENSE.md"
 
 [dependencies]
 anyhow = "1.0.104"
+dunce = "1.0.5"
 futures = "0.3"
 goose = { git = "https://github.com/aaif-goose/goose", rev = "591edd47cf2cfea4957d720c607cf2a4def8673d", features = ["rustls-tls"] }
 home = "0.5.12"

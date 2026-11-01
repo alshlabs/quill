@@ -98,6 +98,8 @@ pub struct ChatSummary {
   pub id: String,
   pub name: String,
   pub updated_at: SystemTime,
+  /// Unset for chats without a directory.
+  pub working_dir: Option<PathBuf>,
 }
 
 pub enum HistoryRole {
@@ -125,12 +127,14 @@ pub fn list_chats() -> impl Future<Output = Result<Vec<ChatSummary>>> {
     sessions.retain(|session| session.message_count > 0);
     sessions.sort_by_key(|session| std::cmp::Reverse(last_active(session)));
 
+    let scratch = scratch_path();
     Ok(
       sessions
         .into_iter()
         .map(|session| ChatSummary {
           name: display_name(&session),
           updated_at: last_active(&session),
+          working_dir: (session.working_dir != scratch).then_some(session.working_dir),
           id: session.id,
         })
         .collect(),
@@ -482,11 +486,15 @@ fn goose_root() -> Option<PathBuf> {
 // goose needs a real directory for every session (shell cwd, turn context and
 // AGENTS.md hint lookup), so chats without one get an empty, project-free one.
 fn scratch_dir() -> Result<PathBuf> {
-  let dir = goose_root()
-    .unwrap_or_else(|| std::env::temp_dir().join("quill"))
-    .join(SCRATCH_DIR);
+  let dir = scratch_path();
   std::fs::create_dir_all(&dir).with_context(|| format!("failed to create {}", dir.display()))?;
   Ok(dir)
+}
+
+fn scratch_path() -> PathBuf {
+  goose_root()
+    .unwrap_or_else(|| std::env::temp_dir().join("quill"))
+    .join(SCRATCH_DIR)
 }
 
 fn builtin_description(name: &str) -> &'static str {

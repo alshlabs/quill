@@ -18,6 +18,7 @@ use crate::icons::ICON_NEW_FILE;
 use crate::services::AppServices;
 use crate::services::conversations::ConversationId;
 use crate::services::conversations::ConversationSummary;
+use crate::services::workspace::Workspace;
 use crate::theme;
 
 pub struct OpenChat(pub ConversationId);
@@ -29,6 +30,7 @@ struct Rename {
 }
 
 pub struct SidebarChats {
+  workspace: Workspace,
   chats: Vec<ConversationSummary>,
   error: Option<SharedString>,
   renaming: Option<Rename>,
@@ -38,9 +40,36 @@ pub struct SidebarChats {
 impl EventEmitter<OpenChat> for SidebarChats {}
 
 impl SidebarChats {
-  pub fn new(cx: &mut Context<Self>) -> Self {
-    let mut lists = AppServices::obtain().conversations().subscribe();
-    let updates = cx.spawn(async move |this, cx| {
+  pub fn new(
+    workspace: Workspace,
+    cx: &mut Context<Self>,
+  ) -> Self {
+    Self {
+      _updates: Self::subscribe(&workspace, cx),
+      workspace,
+      chats: Vec::new(),
+      error: None,
+      renaming: None,
+    }
+  }
+
+  pub fn set_workspace(
+    &mut self,
+    workspace: Workspace,
+    cx: &mut Context<Self>,
+  ) {
+    *self = Self::new(workspace, cx);
+    cx.notify();
+  }
+
+  fn subscribe(
+    workspace: &Workspace,
+    cx: &mut Context<Self>,
+  ) -> Task<()> {
+    let mut lists = AppServices::obtain()
+      .conversations()
+      .subscribe(workspace.clone());
+    cx.spawn(async move |this, cx| {
       while let Some(list) = lists.recv().await {
         let updated = this.update(cx, |this, cx| {
           match list {
@@ -56,14 +85,7 @@ impl SidebarChats {
           return;
         }
       }
-    });
-
-    Self {
-      chats: Vec::new(),
-      error: None,
-      renaming: None,
-      _updates: updates,
-    }
+    })
   }
 
   fn start_rename(
@@ -236,7 +258,7 @@ impl Render for SidebarChats {
       .size_full()
       .p(px(4.0))
       .gap(px(6.0))
-      .child(header())
+      .child(header(&self.workspace))
       .child(chats)
   }
 }
@@ -283,7 +305,7 @@ fn rename_input(
     )
 }
 
-fn header() -> Div {
+fn header(workspace: &Workspace) -> Div {
   h_flex()
     .flex_shrink_0()
     .justify_between()
@@ -294,7 +316,7 @@ fn header() -> Div {
     .text_size(px(11.0))
     .font_weight(FontWeight::BOLD)
     .text_color(rgb(theme::colors::COLOR_SIDEBAR_FOREGROUND))
-    .child(div().min_w_0().truncate().child("Global workspace"))
+    .child(div().min_w_0().truncate().child(workspace.name()))
     .child(header_new_chat())
 }
 

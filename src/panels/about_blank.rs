@@ -8,6 +8,7 @@ use gpui_kit::*;
 
 use crate::app::NewChat;
 use crate::app::OpenSettings;
+use crate::app::OpenWorkspace;
 use crate::icons::ICON_ASTERISK;
 use crate::icons::ICON_COMMAND;
 use crate::icons::ICON_COMMENT;
@@ -95,7 +96,7 @@ fn body(id: &ElementId) -> Stateful<Div> {
           ICON_FOLDER_OPENED,
           "Open Workspace",
           shortcut("O"),
-          None,
+          Some(&OpenWorkspace),
         ))
         .child(suggested_item(
           "settings",

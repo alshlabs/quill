@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
@@ -146,6 +147,8 @@ pub struct Conversation {
 
 pub(super) struct Shared {
   registry: Weak<Registry>,
+  /// Only used when storing a new conversation; a stored one keeps its own.
+  working_dir: Option<PathBuf>,
   prompts: UnboundedSender<String>,
   state: Mutex<SharedState>,
 }
@@ -159,6 +162,7 @@ impl Conversation {
   pub(super) fn spawn(
     registry: &Arc<Registry>,
     id: Option<ConversationId>,
+    working_dir: Option<PathBuf>,
   ) -> Self {
     let (prompts, queue) = unbounded_channel();
     let snapshot = ConversationSnapshot {
@@ -171,6 +175,7 @@ impl Conversation {
     };
     let shared = Arc::new(Shared {
       registry: Arc::downgrade(registry),
+      working_dir,
       prompts,
       state: Mutex::new(SharedState {
         snapshot,
@@ -328,6 +333,7 @@ impl Conversation {
           .context("No models configured")?;
         let mut agent = AgentHarness::new(AgentHarnessOptions {
           session_id: id.map(|id| id.0),
+          working_dir: self.shared.working_dir.clone(),
           ..resolved.into()
         });
         if let Some(names) = agent.take_names() {

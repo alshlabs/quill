@@ -1,3 +1,7 @@
+use std::collections::HashMap;
+use std::path::PathBuf;
+
+use anyhow::Context as _;
 use gpui_kit::base::h_flex;
 use gpui_kit::base::v_flex;
 use gpui_kit::component::Icon;
@@ -23,6 +27,7 @@ use crate::services::AppServices;
 use crate::services::conversations::Conversation;
 use crate::services::conversations::ConversationId;
 use crate::services::updates;
+use crate::services::workspace::Workspace;
 use crate::sidebars::sidebar_chats::OpenChat;
 use crate::sidebars::sidebar_chats::SidebarChats;
 use crate::sidebars::sidebar_plugins::SidebarPlugins;
@@ -49,6 +54,7 @@ actions!(
     NewChat,
     NewWindow,
     OpenSettings,
+    OpenWorkspace,
     Save,
     CloseTab,
     NextTab,
@@ -73,11 +79,62 @@ impl UpdateState {
   }
 }
 
+/// The window each open folder is loaded in, so opening it again focuses that
+/// window.
+#[derive(Default)]
+struct OpenWorkspaces(HashMap<PathBuf, AnyWindowHandle>);
+
+impl Global for OpenWorkspaces {}
+
+impl OpenWorkspaces {
+  fn focus(
+    workspace: &Workspace,
+    cx: &mut App,
+  ) -> bool {
+    let Some(folder) = workspace.folder() else {
+      return false;
+    };
+    let Some(window) = cx.default_global::<Self>().0.get(folder).copied() else {
+      return false;
+    };
+    window
+      .update(cx, |_, window, _| window.activate_window())
+      .is_ok()
+  }
+
+  fn insert(
+    workspace: &Workspace,
+    window: AnyWindowHandle,
+    cx: &mut App,
+  ) {
+    if let Some(folder) = workspace.folder() {
+      cx.default_global::<Self>()
+        .0
+        .insert(folder.to_path_buf(), window);
+    }
+  }
+
+  fn remove(
+    workspace: &Workspace,
+    window: AnyWindowHandle,
+    cx: &mut App,
+  ) {
+    let Some(folder) = workspace.folder() else {
+      return;
+    };
+    let windows = &mut cx.default_global::<Self>().0;
+    if windows.get(folder) == Some(&window) {
+      windows.remove(folder);
+    }
+  }
+}
+
 pub fn init(cx: &mut App) {
   cx.bind_keys([
     KeyBinding::new("secondary-n", NewChat, None),
     KeyBinding::new("secondary-shift-n", NewWindow, None),
     KeyBinding::new("secondary-,", OpenSettings, None),
+    KeyBinding::new("secondary-o", OpenWorkspace, None),
     KeyBinding::new("cmd-w", CloseTab, None),
     KeyBinding::new("secondary-s", Save, None),
     KeyBinding::new("ctrl-tab", NextTab, None),
@@ -135,6 +192,7 @@ fn install_update(
 
 pub struct AppRoot {
   focus_handle: FocusHandle,
+  workspace: Workspace,
   tabs: Entity<Tabs>,
   sidebar_chats: Entity<SidebarChats>,
   _subscriptions: Vec<Subscription>,
@@ -150,8 +208,11 @@ impl AppRoot {
     window.focus(&focus_handle, cx);
 
     let tabs = cx.new(|_| Tabs::default());
-    let sidebar_chats = cx.new(SidebarChats::new);
+    let workspace = Workspace::Global;
+    let sidebar_chats = cx.new(|cx| SidebarChats::new(workspace.clone(), cx));
+    let handle = window.window_handle();
     let subscriptions = vec![
+      cx.on_release(move |this, cx| OpenWorkspaces::remove(&this.workspace, handle, cx)),
       cx.observe(&tabs, |_, _, cx| cx.notify()),
       cx.subscribe_in(
         &sidebar_chats,
@@ -162,6 +223,7 @@ impl AppRoot {
 
     Self {
       focus_handle,
+      workspace,
       tabs,
       sidebar_chats,
       _subscriptions: subscriptions,
@@ -235,9 +297,83 @@ impl AppRoot {
     window: &mut Window,
     cx: &mut Context<Self>,
   ) {
-    let conversation = AppServices::obtain().conversations().create();
+    let conversation = AppServices::obtain()
+      .conversations()
+      .create(&self.workspace);
     let chat = self.add_chat(conversation, window, cx);
     chat.update(cx, |chat, cx| chat.focus_input(window, cx));
+  }
+
+  fn open_workspace(
+    &mut self,
+    _: &OpenWorkspace,
+    window: &mut Window,
+    cx: &mut Context<Self>,
+  ) {
+    let picked = cx.prompt_for_paths(PathPromptOptions {
+      files: false,
+      directories: true,
+      multiple: false,
+      prompt: None,
+    });
+    cx.spawn_in(window, async move |this, cx| {
+      let Ok(picked) = picked.await else {
+        return;
+      };
+      let Some(picked) = picked.transpose() else {
+        return;
+      };
+      let workspace =
+        picked.and_then(|paths| Workspace::open(paths.first().context("No folder was picked")?));
+      let _ = this.update_in(cx, |this, window, cx| match workspace {
+        Ok(workspace) => this.load_workspace(workspace, window, cx),
+        Err(error) => {
+          drop(window.prompt(
+            PromptLevel::Critical,
+            "Cannot open the workspace",
+            Some(&format!("{error:#}")),
+            &["OK"],
+            cx,
+          ));
+        }
+      });
+    })
+    .detach();
+  }
+
+  /// Focuses the window that already has the folder loaded instead.
+  fn load_workspace(
+    &mut self,
+    workspace: Workspace,
+    window: &mut Window,
+    cx: &mut Context<Self>,
+  ) {
+    if workspace == self.workspace || OpenWorkspaces::focus(&workspace, cx) {
+      return;
+    }
+
+    let handle = window.window_handle();
+    OpenWorkspaces::remove(&self.workspace, handle, cx);
+    OpenWorkspaces::insert(&workspace, handle, cx);
+    self.workspace = workspace;
+    self.sidebar_chats.update(cx, |sidebar, cx| {
+      sidebar.set_workspace(self.workspace.clone(), cx)
+    });
+
+    let chats: Vec<_> = self
+      .tabs
+      .read(cx)
+      .items()
+      .iter()
+      .filter(|tab| matches!(tab.kind, TabKind::Chat(_)))
+      .map(|tab| tab.id)
+      .collect();
+    self.tabs.update(cx, |tabs, cx| {
+      for id in chats {
+        tabs.close(id, cx);
+      }
+    });
+    cx.notify();
   }
 
   fn open_settings(
@@ -320,6 +456,7 @@ impl Render for AppRoot {
       .track_focus(&self.focus_handle)
       .on_action(cx.listener(Self::new_chat))
       .on_action(cx.listener(Self::open_settings))
+      .on_action(cx.listener(Self::open_workspace))
       .on_action(cx.listener(Self::close_tab))
       .on_action(cx.listener(Self::next_tab))
       .on_action(cx.listener(Self::prev_tab))
@@ -373,11 +510,11 @@ impl Render for AppRoot {
           .child(main_content().child(tab_view(&self.tabs, cx))),
       )
       // Main body
-      .child(status_bar())
+      .child(status_bar(&self.workspace))
   }
 }
 
-fn status_bar() -> Div {
+fn status_bar(workspace: &Workspace) -> Div {
   h_flex()
     .flex_shrink_0()
     .h(px(30.0))
@@ -403,7 +540,7 @@ fn status_bar() -> Div {
             .truncate()
             .text_xs()
             .text_color(rgb(theme::colors::COLOR_TAB_INACTIVE_FOREGROUND))
-            .child("Global workspace"),
+            .child(workspace.name()),
         ),
     )
     .child(

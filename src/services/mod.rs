@@ -1,6 +1,7 @@
 pub mod config;
 pub mod conversations;
 pub mod updates;
+pub mod workspace;
 
 use std::path::Path;
 use std::path::PathBuf;

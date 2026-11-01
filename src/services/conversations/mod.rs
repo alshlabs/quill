@@ -23,6 +23,7 @@ pub use self::conversation::ConversationStatus;
 pub use self::conversation::ConversationUpdate;
 pub use self::conversation::MessageRole;
 use crate::services::config::ConfigService;
+use crate::services::workspace::Workspace;
 
 /// Identifies a stored conversation.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
@@ -33,6 +34,7 @@ pub struct ConversationSummary {
   pub id: ConversationId,
   pub name: String,
   pub updated_at: SystemTime,
+  pub workspace: Workspace,
 }
 
 /// Stored conversations with at least one message, most recently active first,
@@ -57,14 +59,18 @@ impl Conversations {
     })
   }
 
-  /// Receives the whole list whenever it changes, starting with the current one.
-  pub fn subscribe(&self) -> UnboundedReceiver<ConversationList> {
+  /// Receives the workspace's whole list whenever it changes, starting with the
+  /// current one.
+  pub fn subscribe(
+    &self,
+    workspace: Workspace,
+  ) -> UnboundedReceiver<ConversationList> {
     let (tx, rx) = unbounded_channel();
     let mut state = self.registry.state();
     if let Some(list) = &state.list {
-      let _ = tx.send(list.clone());
+      let _ = tx.send(in_workspace(list, &workspace));
     }
-    state.subscribers.push(tx);
+    state.subscribers.push((workspace, tx));
     let load = state.requested == 0;
     drop(state);
 
@@ -75,8 +81,11 @@ impl Conversations {
   }
 
   /// A new conversation, stored once its first prompt is sent.
-  pub fn create(&self) -> Conversation {
-    Conversation::spawn(&self.registry, None)
+  pub fn create(
+    &self,
+    workspace: &Workspace,
+  ) -> Conversation {
+    Conversation::spawn(&self.registry, None, workspace.folder().map(Into::into))
   }
 
   /// Everyone opening the same conversation shares it, and so shares one agent.
@@ -92,7 +101,7 @@ impl Conversations {
       return conversation;
     }
 
-    let conversation = Conversation::spawn(&self.registry, Some(id.clone()));
+    let conversation = Conversation::spawn(&self.registry, Some(id.clone()), None);
     state.open.insert(id.clone(), conversation.downgrade());
     conversation
   }
@@ -155,7 +164,7 @@ struct Registry {
 struct RegistryState {
   open: HashMap<ConversationId, Weak<conversation::Shared>>,
   list: Option<ConversationList>,
-  subscribers: Vec<UnboundedSender<ConversationList>>,
+  subscribers: Vec<(Workspace, UnboundedSender<ConversationList>)>,
   requested: u64,
   published: u64,
 }
@@ -211,6 +220,9 @@ impl Registry {
               id: ConversationId(chat.id),
               name: chat.name,
               updated_at: chat.updated_at,
+              workspace: chat
+                .working_dir
+                .map_or(Workspace::Global, Workspace::Folder),
             })
             .collect()
         })
@@ -232,7 +244,20 @@ impl Registry {
     state.published = generation;
     state
       .subscribers
-      .retain(|subscriber| subscriber.send(list.clone()).is_ok());
+      .retain(|(workspace, subscriber)| subscriber.send(in_workspace(&list, workspace)).is_ok());
     state.list = Some(list);
   }
+}
+
+fn in_workspace(
+  list: &ConversationList,
+  workspace: &Workspace,
+) -> ConversationList {
+  list.as_ref().map_err(Clone::clone).map(|chats| {
+    chats
+      .iter()
+      .filter(|chat| chat.workspace == *workspace)
+      .cloned()
+      .collect()
+  })
 }
