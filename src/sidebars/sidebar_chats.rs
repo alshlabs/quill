@@ -2,9 +2,11 @@ use std::time::SystemTime;
 
 use gpui_kit::base::h_flex;
 use gpui_kit::base::v_flex;
+use gpui_kit::component::Icon;
 use gpui_kit::*;
 
 use crate::app::NewChat;
+use crate::icons::ICON_NEW_FILE;
 use crate::services::agent;
 use crate::services::agent::ChatSummary;
 use crate::theme;
@@ -105,29 +107,44 @@ impl Render for SidebarChats {
       .size_full()
       .p(px(4.0))
       .gap(px(6.0))
-      .child(new_chat_button())
+      .child(header())
       .child(chats)
   }
 }
 
-fn new_chat_button() -> Stateful<Div> {
+fn header() -> Div {
   h_flex()
-    .id("sidebar-new-chat")
     .flex_shrink_0()
-    .ml(px(4.0))
-    .mr(px(4.0))
-    .mt(px(4.0))
-    .h(px(28.0))
+    .justify_between()
+    .items_center()
+    .h(px(22.0))
+    .pl(px(8.0))
+    .pr(px(2.0))
+    .text_size(px(11.0))
+    .font_weight(FontWeight::BOLD)
+    .text_color(rgb(theme::colors::COLOR_SIDEBAR_FOREGROUND))
+    .child(div().min_w_0().truncate().child("No workspace"))
+    .child(header_new_chat())
+}
+
+fn header_new_chat() -> Stateful<Div> {
+  h_flex()
+    .id("sidebar-chats-new-chat")
+    .flex_shrink_0()
     .justify_center()
+    .items_center()
+    .w(px(22.0))
+    .h(px(22.0))
     .rounded(px(4.0))
     .cursor_pointer()
-    .bg(rgb(theme::colors::COLOR_BUTTON_BACKGROUND))
-    .text_size(px(13.0))
-    .font_weight(FontWeight::LIGHT)
-    .text_color(rgb(theme::colors::COLOR_BUTTON_FOREGROUND))
-    .hover(|this| this.bg(rgb(theme::colors::COLOR_BUTTON_HOVER_BACKGROUND)))
+    .text_color(rgb(theme::colors::COLOR_ICON_FOREGROUND))
+    .hover(|this| {
+      this
+        .bg(rgba(theme::colors::COLOR_TOOLBAR_HOVER_BACKGROUND_A))
+        .text_color(rgb(theme::colors::COLOR_FOREGROUND))
+    })
     .on_click(|_, window, cx| window.dispatch_action(NewChat.boxed_clone(), cx))
-    .child("New Chat")
+    .child(Icon::empty().data(ICON_NEW_FILE).h(px(16.0)).w(px(16.0)))
 }
 
 fn relative_time(

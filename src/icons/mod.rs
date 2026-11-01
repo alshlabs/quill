@@ -25,3 +25,4 @@ pub const ICON_ARROW_UP         : &[u8] = include_bytes!("./vscode/arrow-up.svg"
 pub const ICON_REMOTE           : &[u8] = include_bytes!("./vscode/remote.svg");
 pub const ICON_BELL             : &[u8] = include_bytes!("./vscode/bell.svg");
 pub const ICON_ADD              : &[u8] = include_bytes!("./vscode/add.svg");
+pub const ICON_NEW_FILE         : &[u8] = include_bytes!("./vscode/new-file.svg");
