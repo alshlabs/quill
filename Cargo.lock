@@ -872,7 +872,7 @@ dependencies = [
  "sha1 0.10.7",
  "sync_wrapper",
  "tokio",
- "tokio-tungstenite 0.29.0",
+ "tokio-tungstenite",
  "tower",
  "tower-layer",
  "tower-service",
@@ -1276,16 +1276,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3a53fac24f34a81bc9954b5d6cfce0c21e18ec6959f44f56e8e90e4bb7c346c"
 dependencies = [
  "libbz2-rs-sys",
-]
-
-[[package]]
-name = "calendrical_calculations"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5abbd6eeda6885048d357edc66748eea6e0268e3dd11f326fff5bd248d779c26"
-dependencies = [
- "core_maths",
- "displaydoc",
 ]
 
 [[package]]
@@ -3226,8 +3216,8 @@ dependencies = [
 
 [[package]]
 name = "goose"
-version = "1.53.0"
-source = "git+https://github.com/aaif-goose/goose?rev=591edd47cf2cfea4957d720c607cf2a4def8673d#591edd47cf2cfea4957d720c607cf2a4def8673d"
+version = "1.57.0"
+source = "git+https://github.com/aaif-goose/goose?rev=b23d21cabd9b4de0c045dcdd731821a3a15c2bfc#b23d21cabd9b4de0c045dcdd731821a3a15c2bfc"
 dependencies = [
  "agent-client-protocol",
  "agent-client-protocol-schema",
@@ -3254,15 +3244,12 @@ dependencies = [
  "goose-download-manager",
  "goose-providers",
  "goose-sdk-types",
- "icu_calendar",
- "icu_locale",
  "ignore",
  "image 0.24.9",
  "include_dir",
  "indexmap 2.14.2",
  "indoc",
  "jsonschema",
- "jsonwebtoken",
  "libc",
  "lru",
  "minijinja",
@@ -3271,13 +3258,13 @@ dependencies = [
  "oauth2",
  "once_cell",
  "pastey 0.2.3",
- "pem 4.0.0",
- "process-wrap 9.1.1",
+ "pem",
  "rand 0.10.3",
  "rayon",
  "rcgen",
  "regex",
- "reqwest 0.13.5",
+ "reqwest",
+ "ring",
  "rmcp",
  "rustls",
  "schemars 1.2.3",
@@ -3317,8 +3304,8 @@ dependencies = [
 
 [[package]]
 name = "goose-acp-macros"
-version = "1.53.0"
-source = "git+https://github.com/aaif-goose/goose?rev=591edd47cf2cfea4957d720c607cf2a4def8673d#591edd47cf2cfea4957d720c607cf2a4def8673d"
+version = "1.57.0"
+source = "git+https://github.com/aaif-goose/goose?rev=b23d21cabd9b4de0c045dcdd731821a3a15c2bfc#b23d21cabd9b4de0c045dcdd731821a3a15c2bfc"
 dependencies = [
  "quote",
  "syn 3.0.9",
@@ -3326,15 +3313,19 @@ dependencies = [
 
 [[package]]
 name = "goose-agent"
-version = "0.1.0-alpha.11"
-source = "git+https://github.com/aaif-goose/goose?rev=591edd47cf2cfea4957d720c607cf2a4def8673d#591edd47cf2cfea4957d720c607cf2a4def8673d"
+version = "0.1.0-alpha.13"
+source = "git+https://github.com/aaif-goose/goose?rev=b23d21cabd9b4de0c045dcdd731821a3a15c2bfc#b23d21cabd9b4de0c045dcdd731821a3a15c2bfc"
 dependencies = [
  "anyhow",
  "async-trait",
  "futures",
  "goose-provider-types",
+ "goose-sdk-types",
+ "regex",
  "rmcp",
+ "serde",
  "serde_json",
+ "serde_yaml",
  "tokio",
  "tokio-util",
  "tracing",
@@ -3344,8 +3335,8 @@ dependencies = [
 
 [[package]]
 name = "goose-context-management"
-version = "0.1.0-alpha.11"
-source = "git+https://github.com/aaif-goose/goose?rev=591edd47cf2cfea4957d720c607cf2a4def8673d#591edd47cf2cfea4957d720c607cf2a4def8673d"
+version = "0.1.0-alpha.13"
+source = "git+https://github.com/aaif-goose/goose?rev=b23d21cabd9b4de0c045dcdd731821a3a15c2bfc#b23d21cabd9b4de0c045dcdd731821a3a15c2bfc"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3360,12 +3351,12 @@ dependencies = [
 
 [[package]]
 name = "goose-download-manager"
-version = "0.1.0-alpha.11"
-source = "git+https://github.com/aaif-goose/goose?rev=591edd47cf2cfea4957d720c607cf2a4def8673d#591edd47cf2cfea4957d720c607cf2a4def8673d"
+version = "0.1.0-alpha.13"
+source = "git+https://github.com/aaif-goose/goose?rev=b23d21cabd9b4de0c045dcdd731821a3a15c2bfc#b23d21cabd9b4de0c045dcdd731821a3a15c2bfc"
 dependencies = [
  "anyhow",
  "once_cell",
- "reqwest 0.13.5",
+ "reqwest",
  "serde",
  "tokio",
  "tracing",
@@ -3373,8 +3364,8 @@ dependencies = [
 
 [[package]]
 name = "goose-mcp"
-version = "1.53.0"
-source = "git+https://github.com/aaif-goose/goose?rev=591edd47cf2cfea4957d720c607cf2a4def8673d#591edd47cf2cfea4957d720c607cf2a4def8673d"
+version = "1.57.0"
+source = "git+https://github.com/aaif-goose/goose?rev=b23d21cabd9b4de0c045dcdd731821a3a15c2bfc#b23d21cabd9b4de0c045dcdd731821a3a15c2bfc"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -3402,8 +3393,8 @@ dependencies = [
 
 [[package]]
 name = "goose-provider-types"
-version = "0.1.0-alpha.11"
-source = "git+https://github.com/aaif-goose/goose?rev=591edd47cf2cfea4957d720c607cf2a4def8673d#591edd47cf2cfea4957d720c607cf2a4def8673d"
+version = "0.1.0-alpha.13"
+source = "git+https://github.com/aaif-goose/goose?rev=b23d21cabd9b4de0c045dcdd731821a3a15c2bfc#b23d21cabd9b4de0c045dcdd731821a3a15c2bfc"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3416,7 +3407,7 @@ dependencies = [
  "once_cell",
  "rand 0.10.3",
  "regex",
- "reqwest 0.13.5",
+ "reqwest",
  "rmcp",
  "serde",
  "serde_json",
@@ -3431,8 +3422,8 @@ dependencies = [
 
 [[package]]
 name = "goose-providers"
-version = "0.1.0-alpha.11"
-source = "git+https://github.com/aaif-goose/goose?rev=591edd47cf2cfea4957d720c607cf2a4def8673d#591edd47cf2cfea4957d720c607cf2a4def8673d"
+version = "0.1.0-alpha.13"
+source = "git+https://github.com/aaif-goose/goose?rev=b23d21cabd9b4de0c045dcdd731821a3a15c2bfc#b23d21cabd9b4de0c045dcdd731821a3a15c2bfc"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3442,13 +3433,12 @@ dependencies = [
  "futures",
  "goose-provider-types",
  "include_dir",
- "reqwest 0.13.5",
+ "reqwest",
  "rmcp",
  "serde",
  "serde_json",
  "tokio",
  "tokio-stream",
- "tokio-tungstenite 0.28.0",
  "tokio-util",
  "tracing",
  "url",
@@ -3458,8 +3448,8 @@ dependencies = [
 
 [[package]]
 name = "goose-sdk-types"
-version = "0.1.0-alpha.11"
-source = "git+https://github.com/aaif-goose/goose?rev=591edd47cf2cfea4957d720c607cf2a4def8673d#591edd47cf2cfea4957d720c607cf2a4def8673d"
+version = "0.1.0-alpha.13"
+source = "git+https://github.com/aaif-goose/goose?rev=b23d21cabd9b4de0c045dcdd731821a3a15c2bfc#b23d21cabd9b4de0c045dcdd731821a3a15c2bfc"
 dependencies = [
  "agent-client-protocol",
  "agent-client-protocol-schema",
@@ -4447,7 +4437,6 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tower-service",
- "webpki-roots 1.0.11",
 ]
 
 [[package]]
@@ -4501,20 +4490,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "icu_calendar"
-version = "2.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6f0e52e009b6b16ba9c0693578796f2dd4aaa59a7f8f920423706714a89ac4e"
-dependencies = [
- "calendrical_calculations",
- "displaydoc",
- "icu_locale_core",
- "icu_provider",
- "tinystr",
- "zerovec",
-]
-
-[[package]]
 name = "icu_collections"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4528,20 +4503,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "icu_locale"
-version = "2.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "532b11722e350ab6bf916ba6eb0efe3ee54b932666afec989465f9243fe6dd60"
-dependencies = [
- "icu_collections",
- "icu_locale_core",
- "icu_provider",
- "potential_utf",
- "tinystr",
- "zerovec",
-]
-
-[[package]]
 name = "icu_locale_core"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4549,7 +4510,6 @@ checksum = "25d29b57c17c6528d0dc4c2141cfa2d08200465acb537a3909c8b9b8a4a984c0"
 dependencies = [
  "displaydoc",
  "litemap",
- "serde",
  "tinystr",
  "writeable",
  "zerovec",
@@ -4603,8 +4563,6 @@ checksum = "413099315636c588ee8f011190b329b971a09a8fae9d157e01dcae8379468514"
 dependencies = [
  "displaydoc",
  "icu_locale_core",
- "serde",
- "stable_deref_trait",
  "writeable",
  "yoke",
  "zerofrom",
@@ -5121,24 +5079,6 @@ dependencies = [
  "num-traits",
  "serde_json",
  "zmij",
-]
-
-[[package]]
-name = "jsonwebtoken"
-version = "11.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e75fe14a82d81e5f5af639997db37d8b96045938a7ac6ab18cdbe1c7467e05e1"
-dependencies = [
- "aws-lc-rs",
- "base64 0.22.1",
- "getrandom 0.2.17",
- "js-sys",
- "pem 3.0.6",
- "serde",
- "serde_json",
- "signature",
- "simple_asn1",
- "zeroize",
 ]
 
 [[package]]
@@ -6016,7 +5956,6 @@ dependencies = [
  "getrandom 0.2.17",
  "http",
  "rand 0.8.8",
- "reqwest 0.12.28",
  "serde",
  "serde_json",
  "serde_path_to_error",
@@ -6587,16 +6526,6 @@ dependencies = [
 
 [[package]]
 name = "pem"
-version = "3.0.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d30c53c26bc5b31a98cd02d20f25a7c8567146caf63ed593a9d87b2775291be"
-dependencies = [
- "base64 0.22.1",
- "serde_core",
-]
-
-[[package]]
-name = "pem"
 version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d354a98a3d1251555de99e8fdd8afda05573c31b82f59063a7b0a29b5527f120"
@@ -6893,8 +6822,6 @@ version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d83eb9bc6d8e5cf568e7a1101d60ee05e81ed50ea106026f3d18deeb046d7661"
 dependencies = [
- "serde_core",
- "writeable",
  "zerovec",
 ]
 
@@ -7368,7 +7295,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8774e05a7d0de114588e6a28fe7e71694b82614ed569d86d8b389dfbc98b8ad8"
 dependencies = [
  "aws-lc-rs",
- "pem 4.0.0",
+ "pem",
  "rustls-pki-types",
  "time",
  "x509-parser",
@@ -7507,44 +7434,6 @@ checksum = "19b30a45b0cd0bcca8037f3d0dc3421eaf95327a17cad11964fb8179b4fc4832"
 
 [[package]]
 name = "reqwest"
-version = "0.12.28"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"
-dependencies = [
- "base64 0.22.1",
- "bytes",
- "futures-core",
- "http",
- "http-body",
- "http-body-util",
- "hyper",
- "hyper-rustls",
- "hyper-util",
- "js-sys",
- "log",
- "percent-encoding",
- "pin-project-lite",
- "quinn",
- "rustls",
- "rustls-pki-types",
- "serde",
- "serde_json",
- "serde_urlencoded",
- "sync_wrapper",
- "tokio",
- "tokio-rustls",
- "tower",
- "tower-http 0.6.11",
- "tower-service",
- "url",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "webpki-roots 1.0.11",
-]
-
-[[package]]
-name = "reqwest"
 version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029"
@@ -7669,7 +7558,7 @@ dependencies = [
  "pastey 0.2.3",
  "pin-project-lite",
  "process-wrap 10.0.1",
- "reqwest 0.13.5",
+ "reqwest",
  "rmcp-macros",
  "schemars 1.2.3",
  "serde",
@@ -8121,7 +8010,7 @@ dependencies = [
  "http",
  "log",
  "regex",
- "reqwest 0.13.5",
+ "reqwest",
  "self-replace",
  "semver",
  "serde",
@@ -8474,18 +8363,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
 
 [[package]]
-name = "simple_asn1"
-version = "0.6.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d585997b0ac10be3c5ee635f1bab02d512760d14b7c468801ac8a01d9ae5f1d"
-dependencies = [
- "num-bigint",
- "num-traits",
- "thiserror 2.0.21",
- "time",
-]
-
-[[package]]
 name = "simplecss"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8554,7 +8431,7 @@ dependencies = [
  "aws-smithy-types",
  "http",
  "parking_lot",
- "reqwest 0.13.5",
+ "reqwest",
 ]
 
 [[package]]
@@ -8678,7 +8555,7 @@ dependencies = [
  "tokio-stream",
  "tracing",
  "url",
- "webpki-roots 1.0.11",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -9409,7 +9286,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "abc840c238154d58f9e86b2792261edfde565a17696e1cda1a449de27979801a"
 dependencies = [
  "displaydoc",
- "serde_core",
  "zerovec",
 ]
 
@@ -9482,22 +9358,6 @@ dependencies = [
 
 [[package]]
 name = "tokio-tungstenite"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d25a406cddcc431a75d3d9afc6a7c0f7428d4891dd973e4d54c56b46127bf857"
-dependencies = [
- "futures-util",
- "log",
- "rustls",
- "rustls-pki-types",
- "tokio",
- "tokio-rustls",
- "tungstenite 0.28.0",
- "webpki-roots 0.26.11",
-]
-
-[[package]]
-name = "tokio-tungstenite"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f72a05e828585856dacd553fba484c242c46e391fb0e58917c942ee9202915c"
@@ -9505,7 +9365,7 @@ dependencies = [
  "futures-util",
  "log",
  "tokio",
- "tungstenite 0.29.0",
+ "tungstenite",
 ]
 
 [[package]]
@@ -9518,6 +9378,7 @@ dependencies = [
  "futures-core",
  "futures-io",
  "futures-sink",
+ "futures-util",
  "libc",
  "pin-project-lite",
  "tokio",
@@ -9849,25 +9710,6 @@ dependencies = [
 
 [[package]]
 name = "tungstenite"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8628dcc84e5a09eb3d8423d6cb682965dea9133204e8fb3efee74c2a0c259442"
-dependencies = [
- "bytes",
- "data-encoding",
- "http",
- "httparse",
- "log",
- "rand 0.9.5",
- "rustls",
- "rustls-pki-types",
- "sha1 0.10.7",
- "thiserror 2.0.21",
- "utf-8",
-]
-
-[[package]]
-name = "tungstenite"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c01152af293afb9c7c2a57e4b559c5620b421f6d133261c60dd2d0cdb38e6b8"
@@ -10075,7 +9917,7 @@ dependencies = [
  "serde_json",
  "ureq-proto",
  "utf8-zero",
- "webpki-roots 1.0.11",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -10592,15 +10434,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e49d0e65abc00c142e8f9428da991da9f1a250c39be97459901eb12b9b49f62a"
 dependencies = [
  "rustls-pki-types",
-]
-
-[[package]]
-name = "webpki-roots"
-version = "0.26.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "521bc38abb08001b01866da9f51eb7c5d647a19260e00054a8c7fd5f9e57f7a9"
-dependencies = [
- "webpki-roots 1.0.11",
 ]
 
 [[package]]
@@ -11933,7 +11766,6 @@ dependencies = [
  "displaydoc",
  "yoke",
  "zerofrom",
- "zerovec",
 ]
 
 [[package]]
@@ -11942,7 +11774,6 @@ version = "0.11.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f58a2799cfe9a1670c7ea8edbd52ef8edb93cb37a7f83bf31ba9e35d9dae6a40"
 dependencies = [
- "serde",
  "yoke",
  "zerofrom",
  "zerovec-derive",

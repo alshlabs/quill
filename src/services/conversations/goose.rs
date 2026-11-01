@@ -8,17 +8,17 @@ use anyhow::Context;
 use anyhow::Result;
 use anyhow::anyhow;
 use futures::StreamExt;
-use goose::agents::Agent;
-use goose::agents::AgentConfig as GooseAgentConfig;
 use goose::agents::AgentEvent as GooseEvent;
+use goose::agents::Attachment;
 use goose::agents::ExtensionConfig;
 use goose::agents::GoosePlatform;
 use goose::agents::SessionConfig;
+use goose::agents::StateMachineServices;
+use goose::agents::StateMachineServicesConfig;
 use goose::agents::extension::PLATFORM_EXTENSIONS;
-use goose::agents::state_machine;
+use goose::agents::extension_manager::ClientContext;
 use goose::builtin_extension::get_builtin_extension_names;
 use goose::builtin_extension::register_builtin_extensions;
-use goose::config::Config as GooseConfig;
 use goose::config::GooseMode;
 use goose::config::PermissionManager;
 use goose::conversation::message::Message;
@@ -51,6 +51,7 @@ const UNTITLED_CHAT: &str = "Untitled chat";
 // marker in chats cancelled before the change.
 const CANCELLED_NOTIFICATION: &str = "quill:cancelled";
 const AGENT_STACK_SIZE: usize = 32 * 1024 * 1024;
+const CONNECTION: u64 = 0;
 const GOOSE_ROOT: &str = ".config/quill";
 const SCRATCH_DIR: &str = "scratch";
 const NO_DIRECTORY_PROMPT_KEY: &str = "quill_no_directory";
@@ -323,12 +324,13 @@ async fn run(
   mut queue: UnboundedReceiver<Prompt>,
   names: UnboundedSender<String>,
 ) {
-  let agent = Arc::new(create_agent(names));
+  let services = create_services();
+  let names = forward_names(names);
   let mut session: Option<Session> = None;
 
   while let Some(prompt) = queue.recv().await {
     if session.is_none() {
-      match open_session(&agent, &options).await {
+      match open_session(&services, &options, &names).await {
         Ok(opened) => {
           let _ = prompt.tx.send(AgentEvent::Session {
             id: opened.id.clone(),
@@ -343,12 +345,24 @@ async fn run(
     }
 
     if let Some(session) = &session {
-      respond(&agent, session, prompt).await;
+      respond(&services, session, prompt).await;
     }
   }
 }
 
-fn create_agent(names: UnboundedSender<String>) -> Agent {
+// Mirrors `StateMachineServicesConfig::cli`, except session naming is forced
+// on because the generated names are forwarded to the UI.
+fn create_services() -> Arc<StateMachineServices> {
+  StateMachineServices::with_config(StateMachineServicesConfig::new(
+    Arc::new(SessionManager::instance()),
+    PermissionManager::instance(),
+    None,
+    false,
+    GoosePlatform::GooseCli,
+  ))
+}
+
+fn forward_names(names: UnboundedSender<String>) -> UnboundedSender<SessionNameUpdate> {
   let (name_updates_tx, mut name_updates) = unbounded_channel::<SessionNameUpdate>();
   tokio::spawn(async move {
     while let Some(update) = name_updates.recv().await {
@@ -357,63 +371,74 @@ fn create_agent(names: UnboundedSender<String>) -> Agent {
       }
     }
   });
-
-  // Mirrors `Agent::new`, except session naming is forced on because the
-  // generated names are forwarded to the UI.
-  Agent::with_config(
-    GooseAgentConfig::new(
-      Arc::new(SessionManager::instance()),
-      PermissionManager::instance(),
-      None,
-      GooseConfig::global().get_goose_mode().unwrap_or_default(),
-      false,
-      GoosePlatform::GooseCli,
-    )
-    .with_session_name_update_tx(Some(name_updates_tx)),
-  )
+  name_updates_tx
 }
 
 async fn open_session(
-  agent: &Arc<Agent>,
+  services: &Arc<StateMachineServices>,
   options: &AgentHarnessOptions,
+  names: &UnboundedSender<SessionNameUpdate>,
 ) -> Result<Session> {
   let scratch = scratch_dir()?;
   let session = match &options.session_id {
-    Some(id) => resume_session(agent, &options.model, id).await?,
+    Some(id) => resume_session(services, &options.model, id, names).await?,
     None => {
       let working_dir = options.working_dir.clone().unwrap_or(scratch.clone());
-      create_session(agent, &options.model, working_dir).await?
+      create_session(services, &options.model, working_dir, names).await?
     }
   };
 
   if session.working_dir == scratch {
-    agent
-      .extend_system_prompt(
-        NO_DIRECTORY_PROMPT_KEY.to_string(),
-        NO_DIRECTORY_PROMPT.to_string(),
-      )
-      .await;
+    let mut extras = session.system_prompt_extras.clone();
+    extras.insert(
+      NO_DIRECTORY_PROMPT_KEY.to_string(),
+      NO_DIRECTORY_PROMPT.to_string(),
+    );
+    services
+      .session_manager
+      .update(&session.id)
+      .system_prompt_extras(extras)
+      .apply()
+      .await?;
   }
 
   Ok(session)
 }
 
+async fn attach_session(
+  services: &StateMachineServices,
+  session_id: &str,
+  names: &UnboundedSender<SessionNameUpdate>,
+) {
+  services
+    .attach_session(
+      session_id,
+      CONNECTION,
+      Attachment {
+        client: ClientContext::new(&services.goose_platform, None),
+        session_names: Some(names.clone()),
+      },
+    )
+    .await;
+}
+
 async fn resume_session(
-  agent: &Arc<Agent>,
+  services: &Arc<StateMachineServices>,
   model: &AgentConfig,
   id: &str,
+  names: &UnboundedSender<SessionNameUpdate>,
 ) -> Result<Session> {
-  let session = agent.config.session_manager.get_session(id, false).await?;
-  set_provider(agent, model, &session.id).await?;
-  agent
+  let session = services.session_manager.get_session(id, false).await?;
+  attach_session(services, &session.id, names).await;
+  set_provider(services, model, &session.id).await?;
+  services
     .update_goose_mode(session.goose_mode, &session.id)
     .await?;
-  agent.load_extensions_from_session(&session).await;
   Ok(session)
 }
 
 async fn set_provider(
-  agent: &Agent,
+  services: &StateMachineServices,
   model: &AgentConfig,
   session_id: &str,
 ) -> Result<()> {
@@ -429,7 +454,7 @@ async fn set_provider(
     .preserve_thinking_context(!is_openai_host(&model.provider_host))
     .build();
   let model_config = model_config_from_user_config(PROVIDER, &model.model_id)?;
-  agent
+  services
     .update_provider(Arc::new(provider), model_config, session_id)
     .await
 }
@@ -447,12 +472,12 @@ fn is_openai_host(host: &str) -> bool {
 }
 
 async fn create_session(
-  agent: &Agent,
+  services: &Arc<StateMachineServices>,
   model: &AgentConfig,
   working_dir: PathBuf,
+  names: &UnboundedSender<SessionNameUpdate>,
 ) -> Result<Session> {
-  let session = agent
-    .config
+  let session = services
     .session_manager
     .create_session(
       working_dir,
@@ -462,7 +487,8 @@ async fn create_session(
     )
     .await?;
 
-  set_provider(agent, model, &session.id).await?;
+  attach_session(services, &session.id, names).await;
+  set_provider(services, model, &session.id).await?;
 
   let mut extensions: Vec<_> = PLATFORM_EXTENSIONS
     .values()
@@ -470,8 +496,10 @@ async fn create_session(
     .collect();
   extensions.sort_unstable_by_key(|definition| definition.name);
   for definition in extensions {
-    agent
-      .add_extension(
+    services
+      .extension_manager
+      .enable(
+        &session.id,
         ExtensionConfig::Platform {
           name: definition.name.to_string(),
           description: definition.description.to_string(),
@@ -479,7 +507,6 @@ async fn create_session(
           bundled: Some(true),
           available_tools: Vec::new(),
         },
-        &session.id,
       )
       .await
       .with_context(|| format!("failed to add {}", definition.name))?;
@@ -488,8 +515,10 @@ async fn create_session(
   let mut builtins = get_builtin_extension_names();
   builtins.sort_unstable();
   for name in builtins {
-    agent
-      .add_extension(
+    services
+      .extension_manager
+      .enable(
+        &session.id,
         ExtensionConfig::Builtin {
           name: name.to_string(),
           description: builtin_description(name).to_string(),
@@ -498,7 +527,6 @@ async fn create_session(
           bundled: Some(true),
           available_tools: Vec::new(),
         },
-        &session.id,
       )
       .await
       .with_context(|| format!("failed to add {name}"))?;
@@ -536,7 +564,7 @@ fn builtin_description(name: &str) -> &'static str {
 }
 
 async fn respond(
-  agent: &Agent,
+  services: &Arc<StateMachineServices>,
   session: &Session,
   prompt: Prompt,
 ) {
@@ -544,14 +572,12 @@ async fn respond(
     id: session.id.clone(),
     schedule_id: None,
     max_turns: None,
-    retry_config: None,
   };
 
-  let mut stream = match agent
+  let mut stream = match services
     .reply(
       Message::user().with_text(&prompt.text),
       session_config,
-      state_machine::enabled(),
       Some(prompt.cancel.clone()),
     )
     .await
@@ -627,8 +653,7 @@ async fn respond(
         CANCELLED_NOTIFICATION,
       )
       .with_generated_id_if_missing();
-    let saved = agent
-      .config
+    let saved = services
       .session_manager
       .add_message(&session.id, &marker)
       .await;
