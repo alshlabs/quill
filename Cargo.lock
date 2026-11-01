@@ -7085,6 +7085,7 @@ dependencies = [
  "serde",
  "serde_yaml",
  "tokio",
+ "tokio-util",
  "winresource",
 ]
 

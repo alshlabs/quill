@@ -36,6 +36,7 @@ use tokio::runtime::Runtime;
 use tokio::sync::mpsc::UnboundedReceiver;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::mpsc::unbounded_channel;
+use tokio_util::sync::CancellationToken;
 
 use crate::services::config::AgentConfig;
 
@@ -292,10 +293,12 @@ impl AgentHarness {
   pub fn prompt(
     &self,
     message: &str,
+    cancel: CancellationToken,
   ) -> UnboundedReceiver<AgentEvent> {
     let (tx, rx) = unbounded_channel();
     let _ = self.prompts.send(Prompt {
       text: message.to_string(),
+      cancel,
       tx,
     });
     rx
@@ -536,7 +539,7 @@ async fn respond(
       Message::user().with_text(&prompt.text),
       session_config,
       state_machine::enabled(),
-      None,
+      Some(prompt.cancel.clone()),
     )
     .await
   {
@@ -614,6 +617,7 @@ fn fail(
 
 struct Prompt {
   text: String,
+  cancel: CancellationToken,
   tx: UnboundedSender<AgentEvent>,
 }
 

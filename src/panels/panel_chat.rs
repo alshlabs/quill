@@ -18,6 +18,7 @@ use crate::components::AppChatBubbleUser;
 use crate::components::AppMarkdown;
 use crate::icons::ICON_ARROW_UP;
 use crate::icons::ICON_SPARKLE;
+use crate::icons::ICON_STOP;
 use crate::icons::ICON_TOOLS;
 use crate::services::AppServices;
 use crate::services::conversations::Conversation;
@@ -165,6 +166,10 @@ impl PanelChat {
     }
   }
 
+  fn stop(&mut self) {
+    let _ = self.conversation.send(ConversationCommand::Stop);
+  }
+
   fn select_model(
     &mut self,
     name: SharedString,
@@ -249,7 +254,14 @@ impl Render for PanelChat {
     }
 
     let has_messages = !self.state.messages.is_empty();
-    let on_send = cx.listener(|this, _: &ClickEvent, window, cx| this.submit(window, cx));
+    let responding = self.state.status == ConversationStatus::Responding;
+    let on_send = cx.listener(|this, _: &ClickEvent, window, cx| {
+      if this.state.status == ConversationStatus::Responding {
+        this.stop();
+      } else {
+        this.submit(window, cx);
+      }
+    });
     let model_picker = self.model_picker(cx);
 
     div()
@@ -291,7 +303,7 @@ impl Render for PanelChat {
               this.items_center()
             }
           })
-          .child(chat_entry(&self.input, model_picker, on_send)),
+          .child(chat_entry(&self.input, model_picker, responding, on_send)),
       )
   }
 }
@@ -349,6 +361,7 @@ fn thinking_indicator() -> Div {
 fn chat_entry(
   input: &Entity<TextareaState>,
   model_picker: impl IntoElement,
+  responding: bool,
   on_send: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
 ) -> Div {
   v_flex()
@@ -370,7 +383,7 @@ fn chat_entry(
           .text_color(rgb(theme::colors::COLOR_FOREGROUND)),
       ),
     )
-    .child(toolbar(model_picker, on_send))
+    .child(toolbar(model_picker, responding, on_send))
 }
 
 #[allow(dead_code)]
@@ -409,6 +422,7 @@ fn tip(
 
 fn toolbar(
   model_picker: impl IntoElement,
+  responding: bool,
   on_send: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
 ) -> Div {
   h_flex()
@@ -443,7 +457,7 @@ fn toolbar(
         .gap(px(2.0))
         // .child(toolbar_button(ICON_MIC, None))
         .child(
-          toolbar_button(ICON_ARROW_UP, None)
+          toolbar_button(if responding { ICON_STOP } else { ICON_ARROW_UP }, None)
             .id("chat-send")
             .text_color(rgba(theme::colors::COLOR_DISABLED_FOREGROUND_A))
             .on_click(on_send),

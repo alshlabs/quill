@@ -12,6 +12,7 @@ use anyhow::bail;
 use tokio::sync::mpsc::UnboundedReceiver;
 use tokio::sync::mpsc::UnboundedSender;
 use tokio::sync::mpsc::unbounded_channel;
+use tokio_util::sync::CancellationToken;
 
 use super::ConversationId;
 use super::Registry;
@@ -190,6 +191,8 @@ pub enum ConversationUpdate {
 
 pub enum ConversationCommand {
   Prompt(String),
+  /// Aborts the response in progress, if any.
+  Stop,
   SetModel(String),
 }
 
@@ -202,13 +205,15 @@ pub(super) struct Shared {
   registry: Weak<Registry>,
   /// Only used when storing a new conversation; a stored one keeps its own.
   working_dir: Option<PathBuf>,
-  prompts: UnboundedSender<String>,
+  prompts: UnboundedSender<(String, CancellationToken)>,
   state: Mutex<SharedState>,
 }
 
 struct SharedState {
   snapshot: ConversationSnapshot,
   subscribers: Vec<UnboundedSender<ConversationUpdate>>,
+  /// Belongs to the latest prompt.
+  cancel: CancellationToken,
 }
 
 impl Conversation {
@@ -233,6 +238,7 @@ impl Conversation {
       state: Mutex::new(SharedState {
         snapshot,
         subscribers: Vec::new(),
+        cancel: CancellationToken::new(),
       }),
     });
 
@@ -276,7 +282,13 @@ impl Conversation {
           text.clone(),
         )));
         state.apply(ConversationUpdate::Status(ConversationStatus::Responding));
-        if self.shared.prompts.send(text).is_err() {
+        state.cancel = CancellationToken::new();
+        if self
+          .shared
+          .prompts
+          .send((text, state.cancel.clone()))
+          .is_err()
+        {
           let error = "The conversation has stopped";
           state.apply(ConversationUpdate::Message(ConversationMessage::error(
             error.to_string(),
@@ -285,6 +297,7 @@ impl Conversation {
           bail!(error);
         }
       }
+      ConversationCommand::Stop => self.state().cancel.cancel(),
       ConversationCommand::SetModel(name) => self.apply(ConversationUpdate::Model(name)),
     }
     Ok(())
@@ -335,10 +348,11 @@ impl Conversation {
     connection: &mut Option<Connection>,
     config: &ConfigService,
     text: String,
+    cancel: CancellationToken,
   ) {
     match self.connect(connection, config) {
       Ok(agent) => {
-        let mut events = agent.prompt(&text);
+        let mut events = agent.prompt(&text, cancel);
         while let Some(event) = events.recv().await {
           match event {
             AgentEvent::Session { id } => self.save(ConversationId(id)),
@@ -446,18 +460,20 @@ struct Connection {
 async fn run(
   shared: Weak<Shared>,
   config: ConfigService,
-  mut prompts: UnboundedReceiver<String>,
+  mut prompts: UnboundedReceiver<(String, CancellationToken)>,
 ) {
   if let Some(conversation) = Conversation::upgrade(&shared) {
     conversation.load().await;
   }
 
   let mut connection = None;
-  while let Some(text) = prompts.recv().await {
+  while let Some((text, cancel)) = prompts.recv().await {
     let Some(conversation) = Conversation::upgrade(&shared) else {
       return;
     };
-    conversation.respond(&mut connection, &config, text).await;
+    conversation
+      .respond(&mut connection, &config, text, cancel)
+      .await;
   }
 }
 
