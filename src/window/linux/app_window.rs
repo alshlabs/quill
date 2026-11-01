@@ -23,9 +23,10 @@ use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
 use crate::theme::colors::COLOR_WINDOW_INACTIVE_BACKGROUND;
 
 pub const TITLE_BAR_HEIGHT: f32 = 42.;
-const BRAND_LOGO_SIZE: f32 = 20.;
 const BRAND_COLOR: u32 = COLOR_ACTIVITY_BAR_FOREGROUND;
-const BRAND_LOGO_INSET: f32 = 26. - BRAND_LOGO_SIZE / 2.;
+const BRAND_INSET: f32 = 16.;
+const BRAND_ICON_SIZE: f32 = 14.;
+const BRAND_GAP: f32 = 6.;
 
 const UPDATE_BUTTON_HEIGHT: f32 = 24.;
 const UPDATE_BUTTON_GAP: f32 = 8.;
@@ -139,17 +140,21 @@ impl<V> AppRoot<V> {
           })
           .child(
             div()
-              .pl(px(BRAND_LOGO_INSET))
+              .pl(px(BRAND_INSET))
               .pt(px(1.5))
               .flex()
               .items_center()
+              .text_sm()
+              .gap(px(BRAND_GAP))
+              .font_weight(FontWeight::LIGHT)
+              .text_color(rgb(BRAND_COLOR))
               .child(
                 Icon::empty()
                   .data(ICON_FEATHER)
-                  .h(px(BRAND_LOGO_SIZE))
-                  .w(px(BRAND_LOGO_SIZE))
-                  .text_color(rgb(BRAND_COLOR)),
-              ),
+                  .h(px(BRAND_ICON_SIZE))
+                  .w(px(BRAND_ICON_SIZE)),
+              )
+              .child("Quill"),
           ),
       )
       .children(update_button(UpdateState::get(cx)))

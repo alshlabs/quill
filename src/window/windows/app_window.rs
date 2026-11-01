@@ -53,12 +53,10 @@ use crate::theme::colors::COLOR_WINDOW_BACKGROUND;
 use crate::theme::colors::COLOR_WINDOW_INACTIVE_BACKGROUND;
 
 pub const TITLE_BAR_HEIGHT: f32 = 35.;
-const BRAND_LOGO_SIZE: f32 = 20.;
 const BRAND_COLOR: u32 = COLOR_ACTIVITY_BAR_FOREGROUND;
-/// Centres the logo over the sidebar nav icons, which sit 26px in from the
-/// window's inner edge (`SIDEBAR_MARGIN`, a 1px border and half of
-/// `SIDEBAR_NAV_WIDTH` in `app.rs`).
-const BRAND_LOGO_INSET: f32 = 26. - BRAND_LOGO_SIZE / 2.;
+const BRAND_INSET: f32 = 16.;
+const BRAND_ICON_SIZE: f32 = 14.;
+const BRAND_GAP: f32 = 6.;
 const BOUNDARY_THICKNESS: f32 = 1.;
 
 /// Fixed rather than sized to its label, because the drag strip has to reserve
@@ -180,17 +178,21 @@ impl<V> AppRoot<V> {
           .window_control_area(WindowControlArea::Drag)
           .child(
             div()
-              .pl(px(BRAND_LOGO_INSET))
+              .pl(px(BRAND_INSET))
               .pt(px(1.5))
               .flex()
               .items_center()
+              .text_sm()
+              .gap(px(BRAND_GAP))
+              .font_weight(FontWeight::LIGHT)
+              .text_color(rgb(BRAND_COLOR))
               .child(
                 Icon::empty()
                   .data(ICON_FEATHER)
-                  .h(px(BRAND_LOGO_SIZE))
-                  .w(px(BRAND_LOGO_SIZE))
-                  .text_color(rgb(BRAND_COLOR)),
-              ),
+                  .h(px(BRAND_ICON_SIZE))
+                  .w(px(BRAND_ICON_SIZE)),
+              )
+              .child("Quill"),
           ),
       )
       .when(update_state != UpdateState::UpToDate, |this| {
