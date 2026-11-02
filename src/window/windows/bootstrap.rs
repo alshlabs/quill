@@ -64,7 +64,6 @@ pub fn bootstrap<V, F, Fut>(
 
         cx.new(|cx| {
           Root::new(view, window, cx)
-            .bordered(false)
             .bg(rgba(0x00000000))
             .font(typography::app_font())
         })

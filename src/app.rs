@@ -130,20 +130,31 @@ impl OpenWorkspaces {
 }
 
 pub fn init(cx: &mut App) {
-  cx.bind_keys([
-    KeyBinding::new("secondary-n", NewChat, None),
-    KeyBinding::new("secondary-shift-n", NewWindow, None),
-    KeyBinding::new("secondary-,", OpenSettings, None),
-    KeyBinding::new("secondary-o", OpenWorkspace, None),
+  let bindings = [
+    secondary_binding("secondary-n", NewChat, cx),
+    secondary_binding("secondary-shift-n", NewWindow, cx),
+    secondary_binding("secondary-,", OpenSettings, cx),
+    secondary_binding("secondary-o", OpenWorkspace, cx),
     KeyBinding::new("cmd-w", CloseTab, None),
-    KeyBinding::new("secondary-s", Save, None),
+    secondary_binding("secondary-s", Save, cx),
     KeyBinding::new("ctrl-tab", NextTab, None),
     KeyBinding::new("ctrl-shift-tab", PrevTab, None),
-  ]);
+  ];
+  cx.bind_keys(bindings);
 
   cx.on_action(install_update);
 
   check_for_update(cx);
+}
+
+// `KeyBinding::new` rejects `secondary-`; only `load` resolves it against the host OS.
+fn secondary_binding<A: Action>(
+  keystrokes: &str,
+  action: A,
+  cx: &App,
+) -> KeyBinding {
+  KeyBinding::load(keystrokes, Box::new(action), None, false, None, cx)
+    .unwrap_or_else(|err| panic!("invalid keybinding {keystrokes}: {err:?}"))
 }
 
 fn check_for_update(cx: &mut App) {

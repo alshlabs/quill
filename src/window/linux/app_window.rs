@@ -1,8 +1,8 @@
 //! Linux (and other non-macOS, non-Windows) window shell.
 //!
-//! This path draws its own client-side decorations, rounded frame, drop shadow
-//! and resize hit zones, while still tolerating server-side decorations from the
-//! window manager.
+//! The component library's window border draws the client-side frame, drop
+//! shadow and resize hit zones; this shell paints the bordered content inside
+//! it and still tolerates server-side decorations from the window manager.
 
 use gpui_kit::component::Icon;
 use gpui_kit::component::InteractiveElementExt as _;
@@ -31,8 +31,6 @@ const BRAND_GAP: f32 = 6.;
 const UPDATE_BUTTON_HEIGHT: f32 = 24.;
 const UPDATE_BUTTON_GAP: f32 = 8.;
 
-const WINDOW_RADIUS: f32 = 12.;
-
 struct TitleBarState {
   should_move: bool,
 }
@@ -55,7 +53,7 @@ impl<V: Render + 'static> Render for AppRoot<V> {
       COLOR_WINDOW_INACTIVE_BACKGROUND
     });
 
-    let body = div()
+    div()
       .flex()
       .flex_col()
       .size_full()
@@ -63,24 +61,12 @@ impl<V: Render + 'static> Render for AppRoot<V> {
       .bg(background)
       .text_color(rgb(COLOR_FOREGROUND))
       .border_color(background)
-      .when(chrome.top_left, |this| this.rounded_tl(px(WINDOW_RADIUS)))
-      .when(chrome.top_right, |this| this.rounded_tr(px(WINDOW_RADIUS)))
-      .when(chrome.bottom_left, |this| {
-        this.rounded_bl(px(WINDOW_RADIUS))
-      })
-      .when(chrome.bottom_right, |this| {
-        this.rounded_br(px(WINDOW_RADIUS))
-      })
       .when(chrome.border_top, |this| this.border_t(px(1.)))
       .when(chrome.border_right, |this| this.border_r(px(1.)))
       .when(chrome.border_bottom, |this| this.border_b(px(1.)))
       .when(chrome.border_left, |this| this.border_l(px(1.)))
       .child(deferred(self.title_bar(window, cx)))
-      .child(self.root.clone());
-
-    window_decoration::window_frame()
-      .radius(px(WINDOW_RADIUS))
-      .child(body)
+      .child(self.root.clone())
   }
 }
 

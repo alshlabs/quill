@@ -32,7 +32,7 @@ fn main() -> anyhow::Result<()> {
   };
   let config = Config::from_yaml_file(&config_path);
 
-  dbg!(&config);
+  // dbg!(&config);
 
   let config = ConfigService::new(config);
   let conversations = Conversations::new(config.clone())?;
