@@ -12,8 +12,6 @@ use crate::app::NewWindow;
 const TITLE_BAR_HEIGHT: f32 = 35.;
 const TRAFFIC_LIGHT_RESERVED_WIDTH: f32 = 10.;
 
-const WINDOW_RADIUS: f32 = 12.;
-
 pub fn bootstrap<V, F, Fut>(
   init_callback: impl FnOnce(&mut App) + 'static,
   spawn_callback: F,
