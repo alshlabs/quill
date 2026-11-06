@@ -3054,7 +3054,7 @@ dependencies = [
 [[package]]
 name = "goose"
 version = "1.58.0"
-source = "git+https://github.com/aaif-goose/goose?rev=bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba#bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba"
+source = "git+https://github.com/aaif-goose/goose?rev=4facf56cbab049142809d9afa4648ebe6823ba80#4facf56cbab049142809d9afa4648ebe6823ba80"
 dependencies = [
  "agent-client-protocol",
  "agent-client-protocol-schema",
@@ -3142,7 +3142,7 @@ dependencies = [
 [[package]]
 name = "goose-acp-macros"
 version = "1.58.0"
-source = "git+https://github.com/aaif-goose/goose?rev=bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba#bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba"
+source = "git+https://github.com/aaif-goose/goose?rev=4facf56cbab049142809d9afa4648ebe6823ba80#4facf56cbab049142809d9afa4648ebe6823ba80"
 dependencies = [
  "quote",
  "syn 3.0.9",
@@ -3151,7 +3151,7 @@ dependencies = [
 [[package]]
 name = "goose-agent"
 version = "0.1.0-alpha.13"
-source = "git+https://github.com/aaif-goose/goose?rev=bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba#bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba"
+source = "git+https://github.com/aaif-goose/goose?rev=4facf56cbab049142809d9afa4648ebe6823ba80#4facf56cbab049142809d9afa4648ebe6823ba80"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3173,7 +3173,7 @@ dependencies = [
 [[package]]
 name = "goose-context-management"
 version = "0.1.0-alpha.13"
-source = "git+https://github.com/aaif-goose/goose?rev=bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba#bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba"
+source = "git+https://github.com/aaif-goose/goose?rev=4facf56cbab049142809d9afa4648ebe6823ba80#4facf56cbab049142809d9afa4648ebe6823ba80"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3189,7 +3189,7 @@ dependencies = [
 [[package]]
 name = "goose-download-manager"
 version = "0.1.0-alpha.13"
-source = "git+https://github.com/aaif-goose/goose?rev=bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba#bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba"
+source = "git+https://github.com/aaif-goose/goose?rev=4facf56cbab049142809d9afa4648ebe6823ba80#4facf56cbab049142809d9afa4648ebe6823ba80"
 dependencies = [
  "anyhow",
  "once_cell",
@@ -3202,7 +3202,7 @@ dependencies = [
 [[package]]
 name = "goose-mcp"
 version = "1.58.0"
-source = "git+https://github.com/aaif-goose/goose?rev=bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba#bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba"
+source = "git+https://github.com/aaif-goose/goose?rev=4facf56cbab049142809d9afa4648ebe6823ba80#4facf56cbab049142809d9afa4648ebe6823ba80"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -3231,7 +3231,7 @@ dependencies = [
 [[package]]
 name = "goose-provider-types"
 version = "0.1.0-alpha.13"
-source = "git+https://github.com/aaif-goose/goose?rev=bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba#bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba"
+source = "git+https://github.com/aaif-goose/goose?rev=4facf56cbab049142809d9afa4648ebe6823ba80#4facf56cbab049142809d9afa4648ebe6823ba80"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3260,7 +3260,7 @@ dependencies = [
 [[package]]
 name = "goose-providers"
 version = "0.1.0-alpha.13"
-source = "git+https://github.com/aaif-goose/goose?rev=bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba#bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba"
+source = "git+https://github.com/aaif-goose/goose?rev=4facf56cbab049142809d9afa4648ebe6823ba80#4facf56cbab049142809d9afa4648ebe6823ba80"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -3286,7 +3286,7 @@ dependencies = [
 [[package]]
 name = "goose-sdk-types"
 version = "0.1.0-alpha.13"
-source = "git+https://github.com/aaif-goose/goose?rev=bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba#bfe8ccd23de1d2c47a4cb2970d522f093ae7f2ba"
+source = "git+https://github.com/aaif-goose/goose?rev=4facf56cbab049142809d9afa4648ebe6823ba80#4facf56cbab049142809d9afa4648ebe6823ba80"
 dependencies = [
  "agent-client-protocol",
  "agent-client-protocol-schema",
@@ -5361,9 +5361,9 @@ checksum = "c2a86d3146ed3995b5913c414f6664344b9617457320782e64f0bb44afd49d74"
 
 [[package]]
 name = "mime"
-version = "0.3.17"
+version = "0.3.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
+checksum = "d5848f5a9e8117cf94f2f90faac24a87ff81600ff8628c1e3deaab572e76bfa1"
 
 [[package]]
 name = "mime_guess"
@@ -7302,9 +7302,9 @@ dependencies = [
 
 [[package]]
 name = "rmcp"
-version = "3.8.0"
+version = "3.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8be15815186873ea063bf005011d16c356804973489e40c39116ae3a2878d1f"
+checksum = "d24a7e92f4bcaa36b97fa93c4fa7ca8f3e669eced949345b3462dba333c7f909"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -7326,6 +7326,7 @@ dependencies = [
  "schemars 1.2.3",
  "serde",
  "serde_json",
+ "sha2 0.11.1",
  "sse-stream",
  "thiserror 2.0.21",
  "tokio",
@@ -7338,9 +7339,9 @@ dependencies = [
 
 [[package]]
 name = "rmcp-macros"
-version = "3.8.0"
+version = "3.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b0748e054a5f5598b3213cf72099ae6b2745ba4d996c59ccf455150a7dbb839"
+checksum = "b3140f24a766f80f9ec1607bde85680959a69b83d46fa9ce87dadab7e67ab029"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -7784,7 +7785,7 @@ dependencies = [
  "tokio",
  "ureq",
  "urlencoding",
- "zip 9.3.0",
+ "zip 9.4.0",
  "zipsign-api",
 ]
 
@@ -11434,9 +11435,9 @@ dependencies = [
 
 [[package]]
 name = "zip"
-version = "9.3.0"
+version = "9.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eaeb7f16d2605b49aef586996ded29e65642fab7259a3077e537351df6d80426"
+checksum = "3cec733c9820347a592f6375c3c0089b479ba0a0b1cbf3dd1958b02959b7c033"
 dependencies = [
  "crc32fast",
  "flate2",
