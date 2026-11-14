@@ -6742,6 +6742,7 @@ dependencies = [
  "goose",
  "goose-mcp",
  "gpui-kit",
+ "gpui-pre",
  "home",
  "raw-window-handle",
  "rmcp",
