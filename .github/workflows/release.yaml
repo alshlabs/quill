@@ -207,7 +207,7 @@ jobs:
 
   build_windows_arm64:
     name: 🟦 Windows ARM64
-    runs-on: windows-latest
+    runs-on: windows-11-arm
     needs:
       - version
       - format
