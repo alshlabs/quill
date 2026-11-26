@@ -16,7 +16,7 @@ use goose::agents::SessionConfig;
 use goose::agents::StateMachineServices;
 use goose::agents::StateMachineServicesConfig;
 use goose::agents::extension::PLATFORM_EXTENSIONS;
-use goose::agents::extension_manager::ClientContext;
+use goose::agents::extension_manager::client_context;
 use goose::builtin_extension::get_builtin_extension_names;
 use goose::builtin_extension::register_builtin_extensions;
 use goose::config::GooseMode;
@@ -415,7 +415,7 @@ async fn attach_session(
       session_id,
       CONNECTION,
       Attachment {
-        client: ClientContext::new(&services.goose_platform, None),
+        client: client_context(&services.goose_platform, None),
         session_names: Some(names.clone()),
       },
     )
