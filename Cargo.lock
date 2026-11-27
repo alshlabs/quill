@@ -244,9 +244,9 @@ dependencies = [
 
 [[package]]
 name = "allocator-api2"
-version = "0.2.21"
+version = "0.2.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
+checksum = "57b212daf2e827b1ccdd778b7eb48ba433e58cb0e4f27b43cd6b7a608425a014"
 
 [[package]]
 name = "android_system_properties"
@@ -1025,14 +1025,14 @@ dependencies = [
 
 [[package]]
 name = "blake3"
-version = "1.8.7"
+version = "1.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d9e454fc11f76977dc803893aff6304ed33d6a26efae8696573bea74baa27ae"
+checksum = "64c0e36294adc8db531500e3f2b8ec75c4af9177271e9c6d33f93609d56e57cd"
 dependencies = [
  "arrayvec",
  "cc",
  "cfg-if",
- "constant_time_eq 0.4.2",
+ "constant_time_eq",
  "cpufeatures 0.3.1",
 ]
 
@@ -1569,12 +1569,6 @@ dependencies = [
  "getrandom 0.4.3",
  "tiny-keccak",
 ]
-
-[[package]]
-name = "constant_time_eq"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d52eff69cd5e647efe296129160853a42795992097e8af39800e1060caeea9b"
 
 [[package]]
 name = "constant_time_eq"
@@ -3046,7 +3040,7 @@ dependencies = [
 [[package]]
 name = "goose"
 version = "1.61.0"
-source = "git+https://github.com/aaif-goose/goose?rev=51f875e6628623ab7a378255b86b6519a4f0c17f#51f875e6628623ab7a378255b86b6519a4f0c17f"
+source = "git+https://github.com/aaif-goose/goose?rev=c546eaa1cd02696e4cd628e203df51429e158175#c546eaa1cd02696e4cd628e203df51429e158175"
 dependencies = [
  "agent-client-protocol",
  "agent-client-protocol-schema",
@@ -3134,7 +3128,7 @@ dependencies = [
 [[package]]
 name = "goose-acp-macros"
 version = "1.61.0"
-source = "git+https://github.com/aaif-goose/goose?rev=51f875e6628623ab7a378255b86b6519a4f0c17f#51f875e6628623ab7a378255b86b6519a4f0c17f"
+source = "git+https://github.com/aaif-goose/goose?rev=c546eaa1cd02696e4cd628e203df51429e158175#c546eaa1cd02696e4cd628e203df51429e158175"
 dependencies = [
  "quote",
  "syn 3.0.10",
@@ -3143,7 +3137,7 @@ dependencies = [
 [[package]]
 name = "goose-acp-types"
 version = "0.1.0-alpha.16"
-source = "git+https://github.com/aaif-goose/goose?rev=51f875e6628623ab7a378255b86b6519a4f0c17f#51f875e6628623ab7a378255b86b6519a4f0c17f"
+source = "git+https://github.com/aaif-goose/goose?rev=c546eaa1cd02696e4cd628e203df51429e158175#c546eaa1cd02696e4cd628e203df51429e158175"
 dependencies = [
  "agent-client-protocol",
  "agent-client-protocol-schema",
@@ -3155,7 +3149,7 @@ dependencies = [
 [[package]]
 name = "goose-mcp"
 version = "1.61.0"
-source = "git+https://github.com/aaif-goose/goose?rev=51f875e6628623ab7a378255b86b6519a4f0c17f#51f875e6628623ab7a378255b86b6519a4f0c17f"
+source = "git+https://github.com/aaif-goose/goose?rev=c546eaa1cd02696e4cd628e203df51429e158175#c546eaa1cd02696e4cd628e203df51429e158175"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -6423,7 +6417,7 @@ dependencies = [
 [[package]]
 name = "oi-kit-agent"
 version = "0.1.0-alpha.16"
-source = "git+https://github.com/aaif-goose/goose?rev=51f875e6628623ab7a378255b86b6519a4f0c17f#51f875e6628623ab7a378255b86b6519a4f0c17f"
+source = "git+https://github.com/aaif-goose/goose?rev=c546eaa1cd02696e4cd628e203df51429e158175#c546eaa1cd02696e4cd628e203df51429e158175"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6456,7 +6450,7 @@ dependencies = [
 [[package]]
 name = "oi-kit-context-management"
 version = "0.1.0-alpha.16"
-source = "git+https://github.com/aaif-goose/goose?rev=51f875e6628623ab7a378255b86b6519a4f0c17f#51f875e6628623ab7a378255b86b6519a4f0c17f"
+source = "git+https://github.com/aaif-goose/goose?rev=c546eaa1cd02696e4cd628e203df51429e158175#c546eaa1cd02696e4cd628e203df51429e158175"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6472,7 +6466,7 @@ dependencies = [
 [[package]]
 name = "oi-kit-download-manager"
 version = "0.1.0-alpha.16"
-source = "git+https://github.com/aaif-goose/goose?rev=51f875e6628623ab7a378255b86b6519a4f0c17f#51f875e6628623ab7a378255b86b6519a4f0c17f"
+source = "git+https://github.com/aaif-goose/goose?rev=c546eaa1cd02696e4cd628e203df51429e158175#c546eaa1cd02696e4cd628e203df51429e158175"
 dependencies = [
  "anyhow",
  "once_cell",
@@ -6485,7 +6479,7 @@ dependencies = [
 [[package]]
 name = "oi-kit-provider-types"
 version = "0.1.0-alpha.16"
-source = "git+https://github.com/aaif-goose/goose?rev=51f875e6628623ab7a378255b86b6519a4f0c17f#51f875e6628623ab7a378255b86b6519a4f0c17f"
+source = "git+https://github.com/aaif-goose/goose?rev=c546eaa1cd02696e4cd628e203df51429e158175#c546eaa1cd02696e4cd628e203df51429e158175"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -6514,7 +6508,7 @@ dependencies = [
 [[package]]
 name = "oi-kit-providers"
 version = "0.1.0-alpha.16"
-source = "git+https://github.com/aaif-goose/goose?rev=51f875e6628623ab7a378255b86b6519a4f0c17f#51f875e6628623ab7a378255b86b6519a4f0c17f"
+source = "git+https://github.com/aaif-goose/goose?rev=c546eaa1cd02696e4cd628e203df51429e158175#c546eaa1cd02696e4cd628e203df51429e158175"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -7662,20 +7656,20 @@ dependencies = [
 
 [[package]]
 name = "rmcp"
-version = "3.11.0"
+version = "3.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "391f153431ab68664d946513ea0cb3edbca78eaf99c5a983036cacab6220d85b"
+checksum = "fc4fa9a7558c480e1817c0f02e9a73782001ac1f47fb9d26cc073915963282ea"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
  "bytes",
- "chrono",
  "futures",
  "http",
  "http-body-util",
  "hyper",
  "hyper-util",
  "indexmap 2.14.2",
+ "jiff 1.0.3",
  "libc",
  "oauth2",
  "pastey 0.2.3",
@@ -7702,9 +7696,9 @@ dependencies = [
 
 [[package]]
 name = "rmcp-macros"
-version = "3.11.0"
+version = "3.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3598e3f36f4af2b5219b133baf7d97a2197039225adc3d4acf3dd8805b5a2aef"
+checksum = "43c1bf063ba32333267a8bc282ec33ae0edf56bf74890118cb0c7bf910a7a1c0"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -8023,7 +8017,6 @@ version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab508826f74a77ca9d5aba6ff19b522583ee3eaf28a19384ff3d0e5835fadf6e"
 dependencies = [
- "chrono",
  "dyn-clone",
  "indexmap 2.14.2",
  "ref-cast",
@@ -11494,9 +11487,9 @@ checksum = "ac366ea532fa8ee6a992cec9dea525b1dc284e69702f36c2ab5fbebadc81ec86"
 
 [[package]]
 name = "yeslogic-fontconfig-sys"
-version = "6.0.1"
+version = "6.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d8b8abf912b9a29ff112e1671c97c33636903d13a69712037190e6805af4f76"
+checksum = "b2232035104db97d8ded0e24a20d6ba61a0f904e5830d437f411d9a499336224"
 dependencies = [
  "dlib",
  "once_cell",
@@ -11867,7 +11860,7 @@ version = "9.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2d8dbe089cf6b0448b78f5fc50139ab5aaa40d08ac07cdc1baf2c13add35fcce"
 dependencies = [
- "constant_time_eq 0.6.2",
+ "constant_time_eq",
  "crc32fast",
  "flate2",
  "getrandom 0.4.3",
